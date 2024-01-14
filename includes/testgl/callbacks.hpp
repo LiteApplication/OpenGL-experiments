@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 class Player;
@@ -15,3 +16,10 @@ void glfw_key_callback(GLFWwindow *window, int key, int scancode, int action, in
 void glfw_mouse_button_callback(GLFWwindow *window, int button, int action, int mods);
 void glfw_mouse_position_callback(GLFWwindow *window, double xpos, double ypos);
 void glfw_mouse_scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
+void APIENTRY glDebugOutput(GLenum source,
+                            GLenum type,
+                            unsigned int id,
+                            GLenum severity,
+                            GLsizei length,
+                            const char *message,
+                            const void *userParam);

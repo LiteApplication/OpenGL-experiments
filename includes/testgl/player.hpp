@@ -15,6 +15,7 @@ private:
     float last_x, last_y;
 
 public:
+    bool debugMode;
     Player(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f));
     ~Player();
 
@@ -25,4 +26,6 @@ public:
 
     void setupCameraTransform(Shader *shader, uint screen_w,
                               uint screen_h);
+    void toggle_debug() { debugMode = !debugMode; }
+    glm::vec3 *getPositionPtr() { return &camera.Position; }
 };

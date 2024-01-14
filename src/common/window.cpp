@@ -25,12 +25,16 @@ Window::Window(const char *title, int height, int width, bool shouldInitGLAD)
     glfwSetWindowSizeCallback(window, glfw_window_size_callback);
     glfwSwapInterval(GLFW_VSYNC); // Enable vsync
 
+    // Capture the mouse if needed
+    if (CAPTURE_MOUSE)
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
     if (shouldInitGLAD)
     {
         initGLAD();
     }
-
     glfw_window_size_callback(window, width, height);
+    initGL();
 }
 
 Window::~Window()
@@ -38,6 +42,31 @@ Window::~Window()
     // Terminate GLFW
     log_debug("Terminating GLFW");
     glfwTerminate();
+}
+
+void Window::initGL()
+{
+
+    int flags;
+    glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
+    if (flags & GL_CONTEXT_FLAG_DEBUG_BIT)
+    {
+        log_debug("Enabling OpenGL debug context");
+        glEnable(GL_DEBUG_OUTPUT);
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); // makes sure errors are displayed synchronously
+        glDebugMessageCallback(glDebugOutput, 0);
+        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, true);
+    }
+    glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_MARKER, 0,
+                         GL_DEBUG_SEVERITY_NOTIFICATION, -1, "Start debugging");
+
+    glClearColor(0.0f, 0.0f, 0.25f, 1.0f);
+
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 int Window::initGLFW()
@@ -59,7 +88,9 @@ int Window::initGLFW()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // MacOS and Forward Compatibility
-
+#ifdef GLFW_REQUEST_DEBUG_CONTEXT
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true); // Debug context
+#endif
     return EXIT_SUCCESS;
 }
 

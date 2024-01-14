@@ -36,6 +36,91 @@ void setup_player_callbacks(GLFWwindow *window, Player *player)
     glfwSetScrollCallback(window, glfw_mouse_scroll_callback);
 }
 
+void APIENTRY glDebugOutput(GLenum source,
+                            GLenum type,
+                            unsigned int id,
+                            GLenum severity,
+                            GLsizei length,
+                            const char *message,
+                            const void *userParam)
+{
+    // ignore non-significant error/warning codes
+    if (id == 131169 || id == 131185 || id == 131218 || id == 131204)
+        return;
+
+    const char *source_str;
+    const char *type_str;
+
+    switch (source)
+    {
+    case GL_DEBUG_SOURCE_API:
+        source_str = "API";
+        break;
+    case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+        source_str = "Window System";
+        break;
+    case GL_DEBUG_SOURCE_SHADER_COMPILER:
+        source_str = "Shader Compiler";
+        break;
+    case GL_DEBUG_SOURCE_THIRD_PARTY:
+        source_str = "Third Party";
+        break;
+    case GL_DEBUG_SOURCE_APPLICATION:
+        source_str = "Application";
+        break;
+    case GL_DEBUG_SOURCE_OTHER:
+        source_str = "Other";
+        break;
+    }
+
+    switch (type)
+    {
+    case GL_DEBUG_TYPE_ERROR:
+        type_str = "Error";
+        break;
+    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+        type_str = "Deprecated Behaviour";
+        break;
+    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+        type_str = "Undefined Behaviour";
+        break;
+    case GL_DEBUG_TYPE_PORTABILITY:
+        type_str = "Portability";
+        break;
+    case GL_DEBUG_TYPE_PERFORMANCE:
+        type_str = "Performance";
+        break;
+    case GL_DEBUG_TYPE_MARKER:
+        type_str = "Marker";
+        break;
+    case GL_DEBUG_TYPE_PUSH_GROUP:
+        type_str = "Push Group";
+        break;
+    case GL_DEBUG_TYPE_POP_GROUP:
+        type_str = "Pop Group";
+        break;
+    case GL_DEBUG_TYPE_OTHER:
+        type_str = "Other";
+        break;
+    }
+
+    switch (severity)
+    {
+    case GL_DEBUG_SEVERITY_HIGH:
+        log_error("OpenGL: Source : %s, Type : %s, ID : %d: %s", source_str, type_str, id, message);
+        break;
+    case GL_DEBUG_SEVERITY_MEDIUM:
+        log_warn("OpenGL: Source : %s, Type : %s, ID : %d: %s", source_str, type_str, id, message);
+        break;
+    case GL_DEBUG_SEVERITY_LOW:
+        log_info("OpenGL: Source : %s, Type : %s, ID : %d: %s", source_str, type_str, id, message);
+        break;
+    case GL_DEBUG_SEVERITY_NOTIFICATION:
+        log_debug("OpenGL: Source : %s, Type : %s, ID : %d: %s", source_str, type_str, id, message);
+        break;
+    }
+}
+
 // glfw key callback
 void glfw_key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
@@ -44,6 +129,14 @@ void glfw_key_callback(GLFWwindow *window, int key, int scancode, int action, in
     {
         log_debug("Escape key pressed, closing window");
         glfwSetWindowShouldClose(window, GLFW_TRUE);
+    }
+
+    // Pressed F3
+    if (key == GLFW_KEY_F3 && action == GLFW_PRESS)
+    {
+        log_debug("F3 key pressed, toggling debug mode");
+        Player *player = get_player(window);
+        player->toggle_debug();
     }
 }
 

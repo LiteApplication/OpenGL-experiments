@@ -27,7 +27,7 @@ enum struct CameraMovement : u_char
 // Default camera values
 const float CAMERA_YAW = -90.0f;
 const float CAMERA_PITCH = 0.0f;
-const float PLAYER_SPEED = 4.0f;
+const float PLAYER_SPEED = 16.0f;
 const float SENSITIVITY = 0.1f;
 const float ZOOM = 45.0f;
 

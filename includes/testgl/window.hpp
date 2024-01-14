@@ -9,6 +9,7 @@ class Window
 {
 private:
     GLFWwindow *window;
+    void initGL();
 
     bool failed;
 
