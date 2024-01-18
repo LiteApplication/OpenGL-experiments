@@ -1,6 +1,6 @@
 #pragma once
 
-#define WINDOW_TITLE "Test Things"
+#define WINDOW_TITLE "TestGL - OpenGL Sandbox"
 #define WINDOW_HEIGHT 600
 #define WINDOW_WIDTH 800
 
@@ -12,9 +12,9 @@
 #endif
 
 #define CHUNK_SIZE 64           // in voxels
-#define VIEW_DISTANCE 5         // in chunks
+#define VIEW_DISTANCE 6         // in chunks
 #define HEIGHT_VIEW_REDUCTION 2 // 1 = no reduction, 2 = half, 3 = third, etc.
 
-#define CHUNK_GEN_PER_TICK 10
-#define CHUNK_MESH_PER_TICK 10
-#define CHUNK_GPU_UPLOAD_PER_FRAME 10
+#define CHUNK_GEN_PER_TICK 8
+#define CHUNK_MESH_PER_TICK 8
+#define CHUNK_GPU_UPLOAD_PER_FRAME 4

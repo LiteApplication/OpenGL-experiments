@@ -26,6 +26,12 @@ public:
 
     void setupCameraTransform(Shader *shader, uint screen_w,
                               uint screen_h);
-    void toggle_debug() { debugMode = !debugMode; }
+    void toggle_debug()
+    {
+        debugMode = !debugMode;
+        // Print the direction the player is looking at
+        glm::vec3 front = camera.Front;
+        log_debug("Player is looking at (%f, %f, %f)", front.x, front.y, front.z);
+    }
     glm::vec3 *getPositionPtr() { return &camera.Position; }
 };

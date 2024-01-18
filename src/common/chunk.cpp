@@ -33,6 +33,19 @@ Chunk::Chunk(int x, int y, int z) : m_x(x), m_y(y), m_z(z), meshSize(0), VAO(0),
             }
         }
     }
+
+    edgeChanged = Side::NONE;
+
+    for (int side = 0; side < 6; side++)
+    {
+        for (int i = 0; i < CHUNK_SIZE; i++)
+        {
+            for (int j = 0; j < CHUNK_SIZE; j++)
+            {
+                obstructions[side][i][j] = true;
+            }
+        }
+    }
 }
 
 Chunk::~Chunk()
@@ -64,7 +77,7 @@ void Chunk::setVoxel(int x, int y, int z, Voxel value)
         return;
 
     // Check if the voxel is on the edge of the chunk if the mesh shape changes
-    if (value == VOXEL_NONE || voxels[x][y][z] == VOXEL_NONE)
+    if (value == VOXEL_NONE != voxels[x][y][z] == VOXEL_NONE) // XOR
     {
         if (x == 0)
             edgeChanged |= Side::LEFT;
@@ -93,6 +106,7 @@ void Chunk::populate(WorldGenerator::function_t worldGenerator)
 {
     worldGenerator(getPos(), voxels);
     needsSideOcclusionUpdate = true; // we now need to calculate which sides are worth drawing
+    edgeChanged = Side::ALL;
 }
 
 void Chunk::setVoxelLayer(int y, Voxel value)
@@ -123,30 +137,29 @@ void Chunk::calculateNeedsDraw()
     needsSideOcclusionUpdate = false;
     needsMeshUpdate = false;
 
-    for (int i = 0; i < CHUNK_SIZE; i++)
+    for (int x = 0; x < CHUNK_SIZE; x++)
     {
-        for (int j = 0; j < CHUNK_SIZE; j++)
+        for (int y = 0; y < CHUNK_SIZE; y++)
         {
-            for (int k = 0; k < CHUNK_SIZE; k++)
+            for (int z = 0; z < CHUNK_SIZE; z++)
             {
-                needsDraw[i][j][k] = Side::NONE;
+                needsDraw[x][y][z] = Side::NONE;
 
-                if (voxels[i][j][k] == VOXEL_NONE)
+                if (voxels[x][y][z] == VOXEL_NONE)
                     continue;
-                // TODO: Check neighbors in other chunks
 
-                if (i == 0 || voxels[i - 1][j][k] == VOXEL_NONE)
-                    needsDraw[i][j][k] |= Side::LEFT;
-                if (i == CHUNK_SIZE - 1 || voxels[i + 1][j][k] == VOXEL_NONE)
-                    needsDraw[i][j][k] |= Side::RIGHT;
-                if (j == 0 || voxels[i][j - 1][k] == VOXEL_NONE)
-                    needsDraw[i][j][k] |= Side::BOTTOM;
-                if (j == CHUNK_SIZE - 1 || voxels[i][j + 1][k] == VOXEL_NONE)
-                    needsDraw[i][j][k] |= Side::TOP;
-                if (k == 0 || voxels[i][j][k - 1] == VOXEL_NONE)
-                    needsDraw[i][j][k] |= Side::BACK;
-                if (k == CHUNK_SIZE - 1 || voxels[i][j][k + 1] == VOXEL_NONE)
-                    needsDraw[i][j][k] |= Side::FRONT;
+                if ((z == CHUNK_SIZE - 1 && !obstructions[0][x][y]) || (z != CHUNK_SIZE - 1 && voxels[x][y][z + 1] == VOXEL_NONE))
+                    needsDraw[x][y][z] |= Side::FRONT;
+                if ((z == 0 && !obstructions[1][x][y]) || (z != 0 && voxels[x][y][z - 1] == VOXEL_NONE))
+                    needsDraw[x][y][z] |= Side::BACK;
+                if ((x == 0 && !obstructions[2][y][z]) || (x != 0 && voxels[x - 1][y][z] == VOXEL_NONE))
+                    needsDraw[x][y][z] |= Side::LEFT;
+                if ((x == CHUNK_SIZE - 1 && !obstructions[3][y][z]) || (x != CHUNK_SIZE - 1 && voxels[x + 1][y][z] == VOXEL_NONE))
+                    needsDraw[x][y][z] |= Side::RIGHT;
+                if ((y == CHUNK_SIZE - 1 && !obstructions[4][x][z]) || (y != CHUNK_SIZE - 1 && voxels[x][y + 1][z] == VOXEL_NONE))
+                    needsDraw[x][y][z] |= Side::TOP;
+                if ((y == 0 && !obstructions[5][x][z]) || (y != 0 && voxels[x][y - 1][z] == VOXEL_NONE))
+                    needsDraw[x][y][z] |= Side::BOTTOM;
             }
         }
     }
@@ -154,7 +167,7 @@ void Chunk::calculateNeedsDraw()
     needsMeshUpdate = true;
 }
 
-void Chunk::getObstructions(Side side, bool(obstructions)[CHUNK_SIZE][CHUNK_SIZE])
+void Chunk::getObstructions(Side side, bool obstructions[CHUNK_SIZE][CHUNK_SIZE])
 {
     for (int i = 0; i < CHUNK_SIZE; i++)
     {
@@ -185,6 +198,7 @@ void Chunk::getObstructions(Side side, bool(obstructions)[CHUNK_SIZE][CHUNK_SIZE
             case Side::BOTTOM: // Y = 0
                 obstructed = voxels[i][0][j] != VOXEL_NONE;
                 break;
+
             default:
                 break;
             }
@@ -244,7 +258,7 @@ void Chunk::uploadMesh()
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     // Make room for 3 floats coords and 1 int color per vertex
-    glBufferData(GL_ARRAY_BUFFER, meshSize * (3 * sizeof(float) + sizeof(int)), NULL, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, meshSize * (3 * sizeof(float) + sizeof(int)), NULL, GL_DYNAMIC_DRAW);
     glBufferSubData(GL_ARRAY_BUFFER, 0, meshSize * 3 * sizeof(float), meshVertices.data());
     glBufferSubData(GL_ARRAY_BUFFER, meshSize * 3 * sizeof(float), meshSize * sizeof(int), meshColors.data());
 

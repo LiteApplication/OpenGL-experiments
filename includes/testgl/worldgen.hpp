@@ -13,4 +13,7 @@ namespace WorldGenerator
 
     void singleBlock(ChunkPos pos, ChunkData voxels);
     void flat(ChunkPos pos, ChunkData voxels);
+    void perlin(ChunkPos pos, ChunkData voxels);
+
+    void full(ChunkPos pos, ChunkData voxels);
 } // namespace WorldGenerator

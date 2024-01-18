@@ -132,3 +132,45 @@ Side opposite_side(Side side)
         return Side::NONE;
     }
 }
+
+int side_to_index(Side side)
+{
+    switch (side)
+    {
+    case Side::FRONT:
+        return 0;
+    case Side::BACK:
+        return 1;
+    case Side::LEFT:
+        return 2;
+    case Side::RIGHT:
+        return 3;
+    case Side::TOP:
+        return 4;
+    case Side::BOTTOM:
+        return 5;
+    default:
+        return -1;
+    }
+}
+
+ChunkPos dirFromSide(Side side)
+{
+    switch (side)
+    {
+    case Side::FRONT:
+        return ChunkPos(0, 0, 1);
+    case Side::BACK:
+        return ChunkPos(0, 0, -1);
+    case Side::LEFT:
+        return ChunkPos(-1, 0, 0);
+    case Side::RIGHT:
+        return ChunkPos(1, 0, 0);
+    case Side::TOP:
+        return ChunkPos(0, 1, 0);
+    case Side::BOTTOM:
+        return ChunkPos(0, -1, 0);
+    default:
+        return ChunkPos(0, 0, 0);
+    }
+}

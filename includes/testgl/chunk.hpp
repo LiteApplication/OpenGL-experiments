@@ -60,6 +60,11 @@ public:
 
     bool getNeedsSideOcclusionUpdate() { return needsSideOcclusionUpdate; }
     bool getNeedsMeshUpdate() { return needsMeshUpdate; }
-    bool getNeedsMeshUpload() { return needsMeshUpload; }
+    bool getNeedsMeshUpload() { return needsMeshUpload && meshSize; }
     Sides getEdgeChanged() { return edgeChanged; }
+    void setEdgeChanged(Sides sides) { edgeChanged = sides; }
+    void setNeedsSideOcclusionUpdate(bool value) { needsSideOcclusionUpdate = value; }
+
+    // Obstructions for each side of the chunk (for proper culling with neighboring chunks)
+    bool obstructions[6][CHUNK_SIZE][CHUNK_SIZE];
 };

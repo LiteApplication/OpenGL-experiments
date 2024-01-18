@@ -16,7 +16,7 @@ int main(int argc, char **argv)
     {
         return EXIT_FAILURE;
     }
-    Window window("TestGL");
+    Window window(WINDOW_TITLE);
 
     // Load the base shaders
     log_debug("Loading shaders");
@@ -30,7 +30,7 @@ int main(int argc, char **argv)
 
     // Create the world
     log_debug("Creating world");
-    World world(player.getPositionPtr(), WorldGenerator::flat);
+    World world(player.getPositionPtr(), WorldGenerator::perlin);
 
     // Loop until the user closes the window
     log_debug("Starting main loop");

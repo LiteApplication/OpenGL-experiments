@@ -117,14 +117,30 @@ void World::createChunk(ChunkPos pos)
 {
     if (chunks.find(pos) != chunks.end())
     {
-        // TODO : WARNING
-        // log_warn("Tried to create chunk that already exists (%d, %d, %d)", getX(pos), getY(pos), getZ(pos));
+        log_warn("Tried to create chunk that already exists (%d, %d, %d)", getX(pos), getY(pos), getZ(pos));
         return;
     }
-    log_debug("Creating chunk (%d, %d, %d)", getX(pos), getY(pos), getZ(pos));
+    // log_debug("Creating chunk (%d, %d, %d)", getX(pos), getY(pos), getZ(pos));
     chunks[pos] = Chunk(getX(pos), getY(pos), getZ(pos));
     ChunkPos relativePos = pos - playerChunk;
     chunks[pos].populate(worldGenerator);
+
+    // Update the chunk's side occlusion with the neighboring chunks
+    for (int side = 0; side < 6; side++)
+    {
+        Side oppositeSide = (Side)(1 << side);
+        Side sideEnum = opposite_side(oppositeSide);
+        // Get the position of the neighbor chunk
+        ChunkPos neighborPos = pos + dirFromSide(sideEnum);
+        // Check if the neighbor chunk is loaded
+        Chunk *neighbor = getChunk(neighborPos);
+        if (neighbor == nullptr)
+            continue;
+        chunks[pos].getObstructions(sideEnum, neighbor->obstructions[side]);
+        neighbor->getObstructions(oppositeSide, chunks[pos].obstructions[side_to_index(sideEnum)]);
+        // Update the neighbor chunk
+        neighbor->setNeedsSideOcclusionUpdate(true);
+    }
 }
 
 void World::deleteChunk(ChunkPos pos)
@@ -165,6 +181,29 @@ void World::updateSideOcclusion(int numberOfChunks)
             if (numberOfChunks == 0)
                 break;
         }
+        Sides edge = chunk.getEdgeChanged();
+        if (edge == Side::NONE)
+            continue;
+
+        // Loop over the sides
+        for (int side = 0; side < 6; side++)
+        {
+            Side oppositeSide = (Side)(1 << side);
+            Side sideEnum = opposite_side(oppositeSide);
+            // Check if the side has changed
+            if (!(edge & sideEnum))
+                continue;
+            // Get the position of the neighbor chunk
+            ChunkPos neighborPos = pos + dirFromSide(sideEnum);
+            // Check if the neighbor chunk is loaded
+            Chunk *neighbor = getChunk(neighborPos);
+            if (neighbor == nullptr)
+                continue;
+            chunk.getObstructions(sideEnum, neighbor->obstructions[side]);
+            // Update the neighbor chunk
+            neighbor->setNeedsSideOcclusionUpdate(true);
+        }
+        chunk.setEdgeChanged(Side::NONE);
     }
 }
 
@@ -247,6 +286,13 @@ Voxel World::getVoxel(int x, int y, int z)
 
 void World::tick()
 {
+    // Check if the player has moved to another chunk
+    ChunkPos newPlayerChunk = fromWorldPos(*playerPos);
+    if (newPlayerChunk != playerChunk)
+    {
+        (void)0;
+    }
+
     // Update the player position and chunk
     playerChunk = fromWorldPos(*playerPos);
 
