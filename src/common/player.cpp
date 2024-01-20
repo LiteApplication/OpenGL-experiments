@@ -68,8 +68,8 @@ void Player::setupCameraTransform(Shader *shader, uint screen_w,
     shader->setMat4("view", camera.GetViewMatrix());
     shader->setMat4("projection", camera.GetProjectionMatrix(
                                       screen_w, screen_h, 0.1f,
-                                      // We use +2 because it would be sqrt(2) but no need for useless computation
-                                      (VIEW_DISTANCE + 2) * CHUNK_SIZE)); // View distance here
+                                      // We use +3 because it would be 1 + sqrt(2) but no need for useless computation
+                                      (VIEW_DISTANCE + 3) * CHUNK_SIZE)); // View distance here
 }
 
 void Player::mouse_button_callback(int button, int action, int mods)

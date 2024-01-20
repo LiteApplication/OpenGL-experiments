@@ -11,10 +11,13 @@
 #define GLFW_REQUEST_DEBUG_CONTEXT true
 #endif
 
-#define CHUNK_SIZE 64           // in voxels
-#define VIEW_DISTANCE 6         // in chunks
+#define CHUNK_SIZE 16           // in voxels
+#define VIEW_DISTANCE 15        // in chunks
 #define HEIGHT_VIEW_REDUCTION 2 // 1 = no reduction, 2 = half, 3 = third, etc.
 
-#define CHUNK_GEN_PER_TICK 8
-#define CHUNK_MESH_PER_TICK 8
-#define CHUNK_GPU_UPLOAD_PER_FRAME 4
+#define GEN_ALL_CHUNKS_ON_START false
+
+#define TICKS_PER_SECOND 20
+#define CHUNK_GEN_PER_TICK 128
+#define CHUNK_MESH_PER_TICK 256
+#define CHUNK_GPU_UPLOAD_PER_FRAME 64

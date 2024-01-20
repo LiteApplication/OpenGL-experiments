@@ -30,6 +30,8 @@ private:
     bool hasBuffer, needsSideOcclusionUpdate, needsMeshUpdate, needsMeshUpload;
     Sides edgeChanged;
 
+    bool scheduledForDeletion;
+
 public:
     Chunk() = default;
     // Coordinates of the chunk in the world (in chunks)
@@ -61,6 +63,7 @@ public:
     bool getNeedsSideOcclusionUpdate() { return needsSideOcclusionUpdate; }
     bool getNeedsMeshUpdate() { return needsMeshUpdate; }
     bool getNeedsMeshUpload() { return needsMeshUpload && meshSize; }
+    bool getScheduleForDeletion() { return scheduledForDeletion; }
     Sides getEdgeChanged() { return edgeChanged; }
     void setEdgeChanged(Sides sides) { edgeChanged = sides; }
     void setNeedsSideOcclusionUpdate(bool value) { needsSideOcclusionUpdate = value; }

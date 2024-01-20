@@ -12,15 +12,11 @@ namespace WorldGenerator
 
     void flat(ChunkPos pos, Voxel voxels[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE])
     {
-        if (ChunkPosTools::getY(pos) == 0)
+        for (int x = 0; x < CHUNK_SIZE; x++)
         {
-
-            for (int x = 0; x < CHUNK_SIZE; x++)
+            for (int z = 0; z < CHUNK_SIZE; z++)
             {
-                for (int z = 0; z < CHUNK_SIZE; z++)
-                {
-                    voxels[x][0][z] = (x + z) % 4 + 1;
-                }
+                voxels[x][0][z] = (x + z) % 4 + 1;
             }
         }
     }
@@ -36,7 +32,7 @@ namespace WorldGenerator
         {
             for (int z = 0; z < CHUNK_SIZE; z++)
             {
-                int height = (int)(noise.GetNoise((float)(x + CHUNK_SIZE * ChunkPosTools::getX(pos)), (float)(z + CHUNK_SIZE * ChunkPosTools::getZ(pos))) * 10);
+                int height = (int)(noise.GetNoise((float)(x + CHUNK_SIZE * ChunkPosTools::getX(pos)), (float)(z + CHUNK_SIZE * ChunkPosTools::getZ(pos))) * 50);
                 for (int y = 0; y < CHUNK_SIZE; y++)
                 {
                     if (y + chunkY < height)

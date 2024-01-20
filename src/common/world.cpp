@@ -14,6 +14,11 @@ namespace ChunkPosTools
         return x2 * x2 + y2 * y2 + z2 * z2;
     }
 
+    bool chunkTooFar(ChunkPos pos, ChunkPos playerPos)
+    {
+        return abs(getX(pos) - getX(playerPos)) > VIEW_DISTANCE || abs(getY(pos) - getY(playerPos)) > VIEW_DISTANCE || abs(getZ(pos) - getZ(playerPos)) > VIEW_DISTANCE;
+    }
+
     ChunkPos fromWorldPos(int x, int y, int z)
     {
         // We cannot just divide by CHUNK_SIZE because it would round towards 0
@@ -74,21 +79,26 @@ using namespace ChunkPosTools;
 
 ChunkPos World::nextChunkToLoad()
 {
-    // Manhatten distance
-    for (int dist = 1; dist <= VIEW_DISTANCE; dist++)
+    // Load a square of chunks around the player
+    // The square is centered on the player
+    // The square is of size 2 * VIEW_DISTANCE + 1
+
+    // Load closest chunks first
+    for (int dist = 0; dist <= VIEW_DISTANCE; dist++)
     {
-        for (int i = -dist; i <= dist; i++)
+        // Load the chunks on the edges
+        for (int x = -dist; x <= dist; x++)
         {
-            for (int j = -dist; j <= dist; j++)
+            for (int y = -dist / HEIGHT_VIEW_REDUCTION; y <= dist / HEIGHT_VIEW_REDUCTION; y++)
             {
-                for (int k = -dist; k <= dist; k++)
+                for (int z = -dist; z <= dist; z++)
                 {
-                    if (abs(i) + abs(j) * HEIGHT_VIEW_REDUCTION + abs(k) != dist)
+                    // Skip the corners
+                    if (abs(x) == dist && abs(y) == dist / HEIGHT_VIEW_REDUCTION && abs(z) == dist)
                         continue;
-                    ChunkPos pos = playerChunk + ChunkPos(i, j, k);
-                    if (isChunkLoaded(pos))
-                        continue;
-                    return pos;
+                    ChunkPos pos = playerChunk + ChunkPos(x, y, z);
+                    if (!isChunkLoaded(pos))
+                        return pos;
                 }
             }
         }
@@ -110,7 +120,7 @@ Chunk *World::getChunk(ChunkPos pos)
 {
     if (chunks.find(pos) == chunks.end())
         return nullptr;
-    return &chunks[pos];
+    return chunks[pos];
 }
 
 void World::createChunk(ChunkPos pos)
@@ -121,9 +131,12 @@ void World::createChunk(ChunkPos pos)
         return;
     }
     // log_debug("Creating chunk (%d, %d, %d)", getX(pos), getY(pos), getZ(pos));
-    chunks[pos] = Chunk(getX(pos), getY(pos), getZ(pos));
+    Chunk *chunk = new Chunk(getX(pos), getY(pos), getZ(pos));
+    chunksMutex.lock();
+    chunks[pos] = chunk;
+    chunksMutex.unlock();
     ChunkPos relativePos = pos - playerChunk;
-    chunks[pos].populate(worldGenerator);
+    chunk->populate(worldGenerator);
 
     // Update the chunk's side occlusion with the neighboring chunks
     for (int side = 0; side < 6; side++)
@@ -136,16 +149,11 @@ void World::createChunk(ChunkPos pos)
         Chunk *neighbor = getChunk(neighborPos);
         if (neighbor == nullptr)
             continue;
-        chunks[pos].getObstructions(sideEnum, neighbor->obstructions[side]);
-        neighbor->getObstructions(oppositeSide, chunks[pos].obstructions[side_to_index(sideEnum)]);
+        chunk->getObstructions(sideEnum, neighbor->obstructions[side]);
+        neighbor->getObstructions(oppositeSide, chunk->obstructions[side_to_index(sideEnum)]);
         // Update the neighbor chunk
         neighbor->setNeedsSideOcclusionUpdate(true);
     }
-}
-
-void World::deleteChunk(ChunkPos pos)
-{
-    chunks.erase(pos);
 }
 
 World::~World()
@@ -174,14 +182,14 @@ void World::updateSideOcclusion(int numberOfChunks)
     // Iterate through `chunks` and update the side occlusion of each chunk
     for (auto &[pos, chunk] : chunks)
     {
-        if (chunk.getNeedsSideOcclusionUpdate())
+        if (chunk->getNeedsSideOcclusionUpdate())
         {
-            chunk.calculateNeedsDraw();
+            chunk->calculateNeedsDraw();
             numberOfChunks--;
             if (numberOfChunks == 0)
                 break;
         }
-        Sides edge = chunk.getEdgeChanged();
+        Sides edge = chunk->getEdgeChanged();
         if (edge == Side::NONE)
             continue;
 
@@ -199,11 +207,11 @@ void World::updateSideOcclusion(int numberOfChunks)
             Chunk *neighbor = getChunk(neighborPos);
             if (neighbor == nullptr)
                 continue;
-            chunk.getObstructions(sideEnum, neighbor->obstructions[side]);
+            chunk->getObstructions(sideEnum, neighbor->obstructions[side]);
             // Update the neighbor chunk
             neighbor->setNeedsSideOcclusionUpdate(true);
         }
-        chunk.setEdgeChanged(Side::NONE);
+        chunk->setEdgeChanged(Side::NONE);
     }
 }
 
@@ -212,9 +220,9 @@ void World::updateMesh(int numberOfChunks)
     // Iterate through `chunks` and update the mesh of each chunk
     for (auto &[pos, chunk] : chunks)
     {
-        if (chunk.getNeedsMeshUpdate())
+        if (chunk->getNeedsMeshUpdate())
         {
-            chunk.generateMesh();
+            chunk->generateMesh();
             numberOfChunks--;
             if (numberOfChunks == 0)
                 break;
@@ -227,9 +235,9 @@ void World::uploadMesh(int numberOfChunks)
     // Iterate through `chunks` and upload the mesh of each chunk
     for (auto &[pos, chunk] : chunks)
     {
-        if (chunk.getNeedsMeshUpload())
+        if (chunk->getNeedsMeshUpload())
         {
-            chunk.uploadMesh();
+            chunk->uploadMesh();
             numberOfChunks--;
             if (numberOfChunks == 0)
                 break;
@@ -240,20 +248,37 @@ void World::uploadMesh(int numberOfChunks)
 void World::discardChunks()
 {
     // Iterate through `chunks` and delete the chunks that are too far away from the player
+    for (auto &[pos, chunk] : chunks)
+    {
+        if (chunkTooFar(pos, playerChunk))
+            chunk->discard();
+    }
+}
+
+void World::deleteChunks()
+{
+    // Iterate through `chunks` and delete the chunks that are too far away from the player
+    bool needsDeletion = false;
+    for (auto &[pos, chunk] : chunks)
+    {
+        needsDeletion |= chunk->getScheduleForDeletion();
+    }
+    if (!needsDeletion)
+        return;
+
+    chunksMutex.lock();
     for (auto it = chunks.begin(); it != chunks.end();)
     {
-        ChunkPos pos = it->first;
-        if (squaredDist(pos, playerChunk) > VIEW_DISTANCE_2)
+        if (it->second->getScheduleForDeletion())
         {
-            log_debug("Discarding chunk (%d, %d, %d)", getX(pos), getY(pos), getZ(pos));
-            // Check if the chunk is represented in the loaded chunks map
+            delete it->second;
             it = chunks.erase(it);
         }
         else
-        {
-            ++it;
-        }
+            it++;
     }
+
+    chunksMutex.unlock();
 }
 
 void World::draw(Shader *shader)
@@ -261,7 +286,7 @@ void World::draw(Shader *shader)
     // Iterate through `chunks` and draw each chunk
     for (auto &[pos, chunk] : chunks)
     {
-        chunk.draw(shader);
+        chunk->draw(shader);
     }
 }
 
@@ -284,6 +309,20 @@ Voxel World::getVoxel(int x, int y, int z)
     return chunk->getVoxel(x % CHUNK_SIZE, y % CHUNK_SIZE, z % CHUNK_SIZE);
 }
 
+void World::loadAllChunks()
+{
+    loadChunks(VIEW_DISTANCE * VIEW_DISTANCE * VIEW_DISTANCE * 8);
+
+    // Update the side occlusion of the chunks around the player
+    updateSideOcclusion(VIEW_DISTANCE * VIEW_DISTANCE * VIEW_DISTANCE * 8);
+
+    // Update the mesh of the chunks around the player
+    updateMesh(VIEW_DISTANCE * VIEW_DISTANCE * VIEW_DISTANCE * 8);
+
+    // Upload the mesh of the chunks around the player
+    uploadMesh(VIEW_DISTANCE * VIEW_DISTANCE * VIEW_DISTANCE * 8);
+}
+
 void World::tick()
 {
     // Check if the player has moved to another chunk
@@ -296,6 +335,9 @@ void World::tick()
     // Update the player position and chunk
     playerChunk = fromWorldPos(*playerPos);
 
+    // Delete the chunks that are too far away from the player
+    deleteChunks();
+
     // log_debug("Player chunk : (%d, %d, %d)", getX(playerChunk), getY(playerChunk), getZ(playerChunk));
 
     // Load the chunks around the player
@@ -306,10 +348,15 @@ void World::tick()
 
     // Update the mesh of the chunks around the player
     updateMesh(CHUNK_MESH_PER_TICK);
+
+    nTicks++;
 }
 
 void World::graphicalTick(Shader *shader)
 {
+    // Prevent the tick thread from deleting chunks while we're drawing
+    chunksMutex.lock();
+
     // Discard chunks that are too far away from the player
     discardChunks();
 
@@ -318,4 +365,7 @@ void World::graphicalTick(Shader *shader)
 
     // Draw the chunks
     draw(shader);
+
+    // Unlock the mutex
+    chunksMutex.unlock();
 }

@@ -2,6 +2,7 @@
 
 #include <map>
 #include <tuple>
+#include <mutex>
 #include <glm/glm.hpp>
 #include <glm/gtx/norm.hpp>
 
@@ -52,7 +53,9 @@ class World
 {
 private:
     // Store all the loaded chunks
-    std::map<ChunkPos, Chunk> chunks;
+    std::map<ChunkPos, Chunk *> chunks;
+
+    std::mutex chunksMutex;
 
     // Pointer to the player position vector
     glm::vec3 *playerPos;
@@ -74,9 +77,6 @@ private:
     // No mesh or block occlusion will be calculated
     // The chunk has to be within the render distance of the player
     void createChunk(ChunkPos pos);
-
-    // Unload and delete a chunk from the world
-    void deleteChunk(ChunkPos pos);
 
 public:
     // World constructor
@@ -113,9 +113,16 @@ public:
     // Must be ran from the main thread
     void uploadMesh(int numberOfChunks);
 
-    // Discard chunks that are too far away from the player
+    // Loads all the chunks at once, for the first time
+    // Must be ran from the main thread
+    void loadAllChunks();
+
+    // Discard buffers for chunks that are too far away and schedule them for deletion
     // Must be ran from the main thread
     void discardChunks();
+
+    // Delete the chunks from the world data structure
+    void deleteChunks();
 
     // Load chunks, calculate side occlusion, generate meshes
     // This is the main loop, ran on a separate thread
@@ -124,4 +131,10 @@ public:
     // Upload meshes to GPU, draw chunks
     // This is the graphical loop, ran on the main thread
     void graphicalTick(Shader *shader);
+
+    // Number of ticks since the world was created
+    int nTicks = 0;
+
+    // Number of loaded chunks
+    int getLoadedChunks() { return chunks.size(); }
 };

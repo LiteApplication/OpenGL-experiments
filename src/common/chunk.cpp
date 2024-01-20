@@ -15,6 +15,7 @@ Chunk::Chunk(int x, int y, int z) : m_x(x), m_y(y), m_z(z), meshSize(0), VAO(0),
     needsSideOcclusionUpdate = false;
     needsMeshUpdate = false;
     needsMeshUpload = false;
+    scheduledForDeletion = false;
 
     m_modelMatrix = glm::mat4(1.0f);
     m_modelMatrix = glm::translate(m_modelMatrix, glm::vec3(x, y, z) * (float)CHUNK_SIZE);
@@ -53,6 +54,8 @@ Chunk::~Chunk()
     meshVertices.clear();
     meshNormals.clear();
     meshColors.clear();
+
+    // log_debug("Discarding chunk (%d, %d, %d)", m_x, m_y, m_z);
 }
 
 Voxel Chunk::getVoxel(int x, int y, int z)
@@ -283,7 +286,10 @@ void Chunk::discard()
         glDeleteVertexArrays(1, &VAO);
         glDeleteBuffers(1, &VBO);
         // glDeleteBuffers(1, &EBO);
+        hasBuffer = false;
     }
+
+    scheduledForDeletion = true;
 }
 
 void Chunk::draw(Shader *shader)
@@ -291,7 +297,7 @@ void Chunk::draw(Shader *shader)
     if (meshSize == 0)
         return;
 
-    if (!hasBuffer)
+    if (!hasBuffer || scheduledForDeletion)
         return;
 
     shader->use();
