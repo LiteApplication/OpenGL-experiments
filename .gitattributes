@@ -1,0 +1,9 @@
+# Ignore FastNoiseLite, glad and KHR
+includes/glad/* linguist-vendored
+includes/KHR/* linguist-vendored
+includes/FastNoiseLite.hpp linguist-vendored
+src/common/glad.c linguist-vendored
+
+# Ignore LearnOpenGL files as these are not mine
+includes/learnopengl/* linguist-vendored
+
