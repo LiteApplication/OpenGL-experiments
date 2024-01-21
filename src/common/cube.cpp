@@ -7,6 +7,7 @@
 
 namespace CubeMeshSides
 {
+    // TODO: Use the same method as normals_on to generate these
     std::vector<float> faces(Sides sides)
     {
         // Count the number of 1 bits in side
@@ -57,8 +58,6 @@ namespace CubeMeshSides
     std::vector<float> faces_at(float x, float y, float z, Sides sides)
     {
         std::vector<float> faces_vec = faces(sides);
-
-        assert(faces_vec.size() % 3 == 0); // Each vertex has 3 coordinates
 
         for (int i = 0; i < faces_vec.size(); i += 3)
         {

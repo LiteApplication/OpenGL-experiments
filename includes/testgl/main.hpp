@@ -8,5 +8,7 @@
 
 #include <iostream>
 
+class Window;
+
 void tick_thread(World *world, Player *player, Window *window);
 int main(int argc, char **argv);

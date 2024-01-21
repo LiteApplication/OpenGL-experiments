@@ -5,7 +5,7 @@
 #include "testgl/voxel.hpp"
 #include "testgl/chunkpos.hpp"
 
-typedef Voxel ChunkData[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
+typedef Voxel ChunkData[CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE];
 
 namespace WorldGenerator
 {

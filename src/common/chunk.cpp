@@ -6,6 +6,9 @@
 #include "testgl/cube.hpp"
 #include "testgl/world.hpp"
 
+#define voxel3d(x, y, z) (voxels[(x) + CHUNK_SIZE * ((y) + CHUNK_SIZE * (z))])
+#define _getVoxel(x, y, z) (isSimpleChunk ? simpleChunkVoxel : voxel3d(x, y, z))
+
 Chunk::Chunk(int x, int y, int z, World *world) : VAO(0), VBO(0), EBO(0), world(world)
 {
     m_x = x;
@@ -30,7 +33,7 @@ Chunk::Chunk(int x, int y, int z, World *world) : VAO(0), VBO(0), EBO(0), world(
         {
             for (int k = 0; k < CHUNK_SIZE; k++)
             {
-                voxels[i][j][k] = Voxel::Air;
+                voxel3d(i, j, k) = Voxel::Air;
                 needsDraw[i][j][k] = Side::NONE;
             }
         }
@@ -64,14 +67,7 @@ Chunk::~Chunk()
 
 Voxel Chunk::getVoxel(int x, int y, int z)
 {
-    if (isSimpleChunk)
-        return simpleChunkVoxel;
-    if (x < 0 || x >= CHUNK_SIZE || y < 0 || y >= CHUNK_SIZE || z < 0 || z >= CHUNK_SIZE)
-    {
-        log_warn("getVoxel : out of bounds (%d, %d, %d)", x, y, z);
-        return Voxel::Air;
-    }
-    return voxels[x][y][z];
+    return _getVoxel(x, y, z);
 }
 
 void Chunk::setVoxel(int x, int y, int z, Voxel value)
@@ -95,7 +91,7 @@ void Chunk::setVoxel(int x, int y, int z, Voxel value)
                 {
                     for (int k = 0; k < CHUNK_SIZE; k++)
                     {
-                        voxels[i][j][k] = simpleChunkVoxel;
+                        voxel3d(i, j, k) = simpleChunkVoxel;
                     }
                 }
             }
@@ -104,11 +100,11 @@ void Chunk::setVoxel(int x, int y, int z, Voxel value)
         }
     }
     // Check if the voxel is actually changing
-    if (voxels[x][y][z] == value)
+    if (voxel3d(x, y, z) == value)
         return;
 
     // Check if the voxel is on the edge of the chunk if the mesh shape changes
-    if (value == Voxel::Air != voxels[x][y][z] == Voxel::Air) // XOR
+    if (value == Voxel::Air != voxel3d(x, y, z) == Voxel::Air) // XOR
     {
         if (x == 0)
             edgeChanged |= Side::LEFT;
@@ -134,7 +130,7 @@ void Chunk::setVoxel(int x, int y, int z, Voxel value)
         world->addToMeshQueue(this);
     }
 
-    voxels[x][y][z] = value;
+    voxel3d(x, y, z) = value;
 }
 
 void Chunk::populate(WorldGenerator::function_t worldGenerator)
@@ -166,7 +162,7 @@ void Chunk::setVoxelLayer(int y, Voxel value)
     {
         for (int j = 0; j < CHUNK_SIZE; j++)
         {
-            voxels[i][y][j] = value;
+            voxel3d(i, y, j) = value;
         }
     }
     needsSideOcclusionUpdate = true;
@@ -287,26 +283,26 @@ void Chunk::getObstructions(Side side, bool obstructions[CHUNK_SIZE][CHUNK_SIZE]
             switch (side)
             {
             case Side::FRONT: // Z = CHUNK_SIZE - 1
-                obstructed = voxels[i][j][CHUNK_SIZE - 1] != Voxel::Air;
+                obstructed = voxel3d(i, j, CHUNK_SIZE - 1) != Voxel::Air;
                 break;
             case Side::BACK: // Z = 0
-                obstructed = voxels[i][j][0] != Voxel::Air;
+                obstructed = voxel3d(i, j, 0) != Voxel::Air;
                 break;
 
             case Side::LEFT: // X = 0
-                obstructed = voxels[0][i][j] != Voxel::Air;
+                obstructed = voxel3d(0, i, j) != Voxel::Air;
                 break;
 
             case Side::RIGHT: // X = CHUNK_SIZE - 1
-                obstructed = voxels[CHUNK_SIZE - 1][i][j] != Voxel::Air;
+                obstructed = voxel3d(CHUNK_SIZE - 1, i, j) != Voxel::Air;
                 break;
 
             case Side::TOP: // Y = CHUNK_SIZE - 1
-                obstructed = voxels[i][CHUNK_SIZE - 1][j] != Voxel::Air;
+                obstructed = voxel3d(i, CHUNK_SIZE - 1, j) != Voxel::Air;
                 break;
 
             case Side::BOTTOM: // Y = 0
-                obstructed = voxels[i][0][j] != Voxel::Air;
+                obstructed = voxel3d(i, 0, j) != Voxel::Air;
                 break;
 
             default:

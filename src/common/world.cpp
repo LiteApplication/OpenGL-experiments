@@ -68,7 +68,7 @@ void World::createChunk(ChunkPos pos)
     // Update the chunk's side occlusion with the neighboring chunks
     for (int side = 0; side < 6; side++)
     {
-        Side oppositeSide = (Side)(1 << side);
+        Side oppositeSide = static_cast<Side>(1 << side);
         Side sideEnum = opposite_side(oppositeSide);
         // Get the position of the neighbor chunk
         ChunkPos neighborPos = pos + dirFromSide(sideEnum);
@@ -179,7 +179,7 @@ void World::updateSideOcclusion(int numberOfChunks)
         // Loop over the sides
         for (int side = 0; side < 6; side++)
         {
-            Side oppositeSide = (Side)(1 << side);
+            Side oppositeSide = static_cast<Side>(1 << side);
             Side sideEnum = opposite_side(oppositeSide);
             // Check if the side has changed
             if (!(edge & sideEnum))

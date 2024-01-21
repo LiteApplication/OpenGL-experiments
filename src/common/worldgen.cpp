@@ -12,32 +12,32 @@
                              ? _a\
                          : _x > _b ? _b\
                                    : _x; })
-
+#define voxel3d(x, y, z) voxels[(x) + CHUNK_SIZE * (y) + CHUNK_SIZE * CHUNK_SIZE * (z)]
 int roundDown(float x)
 {
     return (int)x - (x < 0 && x != (int)x);
 }
 namespace WorldGenerator
 {
-    void singleBlock(ChunkPos pos, Voxel voxels[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE], Voxel *simpleChunkVoxel, bool *isSimpleChunk)
+    void singleBlock(ChunkPos pos, ChunkData voxels, Voxel *simpleChunkVoxel, bool *isSimpleChunk)
     {
         *isSimpleChunk = false;
-        voxels[0][0][0] = Voxel::Dirt;
+        voxel3d(0, 0, 0) = Voxel::Dirt;
     }
 
-    void flat(ChunkPos pos, Voxel voxels[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE], Voxel *simpleChunkVoxel, bool *isSimpleChunk)
+    void flat(ChunkPos pos, ChunkData voxels, Voxel *simpleChunkVoxel, bool *isSimpleChunk)
     {
         *isSimpleChunk = false;
         for (int x = 0; x < CHUNK_SIZE; x++)
         {
             for (int z = 0; z < CHUNK_SIZE; z++)
             {
-                voxels[x][0][z] = Voxel::Grass;
+                voxel3d(x, 0, z) = Voxel::Grass;
             }
         }
     }
 
-    void perlin(ChunkPos pos, Voxel voxels[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE], Voxel *simpleChunkVoxel, bool *isSimpleChunk)
+    void perlin(ChunkPos pos, ChunkData voxels, Voxel *simpleChunkVoxel, bool *isSimpleChunk)
     {
         FastNoiseLite noise;
         noise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
@@ -90,18 +90,18 @@ namespace WorldGenerator
             {
                 for (int y = 0; y < height[x][z]; y++)
                 {
-                    voxels[x][y][z] = Voxel::Dirt;
+                    voxel3d(x, y, z) = Voxel::Dirt;
                 }
             }
         }
     }
-    void full(ChunkPos pos, Voxel voxels[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE], Voxel *simpleChunkVoxel, bool *isSimpleChunk)
+    void full(ChunkPos pos, ChunkData voxels, Voxel *simpleChunkVoxel, bool *isSimpleChunk)
     {
         *isSimpleChunk = true;
         *simpleChunkVoxel = Voxel::Dirt;
     }
 
-    void classic(ChunkPos pos, Voxel voxels[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE], Voxel *simpleChunkVoxel, bool *isSimpleChunk)
+    void classic(ChunkPos pos, ChunkData voxels, Voxel *simpleChunkVoxel, bool *isSimpleChunk)
     {
         FastNoiseLite n;
         n.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
@@ -163,25 +163,25 @@ namespace WorldGenerator
             {
                 for (int y = 0; y < height[x][z] - 1; y++)
                 {
-                    voxels[x][y][z] = Voxel::Dirt;
+                    voxel3d(x, y, z) = Voxel::Dirt;
                 }
                 if (height[x][z] > 0)
                 {
-                    voxels[x][height[x][z] - 1][z] = Voxel::Grass;
+                    voxel3d(x, height[x][z] - 1, z) = Voxel::Grass;
                 }
 
                 if (ChunkPosTools::getY(pos) < 0)
                 {
                     if (height[x][z] > 0)
                     {
-                        voxels[x][height[x][z] - 1][z] = Voxel::Sand;
+                        voxel3d(x, height[x][z] - 1, z) = Voxel::Sand;
                     }
                     if (height[x][z] < CHUNK_SIZE)
                     {
 
                         for (int y = height[x][z]; y < CHUNK_SIZE - 2; y++)
                         {
-                            voxels[x][y][z] = Voxel::Water;
+                            voxel3d(x, y, z) = Voxel::Water;
                         }
                     }
                 }

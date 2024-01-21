@@ -21,6 +21,11 @@ add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
 # Define the NDEBUG macro to disable assertions in release builds.
 #add_definitions("-DNDEBUG")
 
+# Add gmon.out
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
+#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg")
+
+
 file(GLOB_RECURSE cpp_sources CONFIGURE_DEPENDS "src/common/*.cpp")
 file(GLOB_RECURSE c_sources CONFIGURE_DEPENDS "src/common/*.c")
 

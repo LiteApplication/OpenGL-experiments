@@ -14,7 +14,7 @@ class Chunk
 {
 private:
     // If isSimpleChunk is true, then there is no guarantee that the voxels array is valid
-    Voxel voxels[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
+    Voxel voxels[CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE];
     Sides needsDraw[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
 
     // If the chunk contains only one type of voxel, we can simplify a lot of things
