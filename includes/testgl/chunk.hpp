@@ -11,8 +11,13 @@
 class Chunk
 {
 private:
+    // If isSimpleChunk is true, then there is no guarantee that the voxels array is valid
     Voxel voxels[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
     Sides needsDraw[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
+
+    // If the chunk contains only one type of voxel, we can simplify a lot of things
+    bool isSimpleChunk;
+    Voxel simpleChunkVoxel;
 
     std::vector<float> meshVertices;
     std::vector<float> meshNormals; // unused
@@ -37,6 +42,8 @@ public:
     // Coordinates of the chunk in the world (in chunks)
     Chunk(int x, int y, int z);
     ~Chunk();
+
+    bool isEmpty() { return isSimpleChunk && simpleChunkVoxel == VOXEL_NONE; }
 
     Voxel getVoxel(int x, int y, int z);
     void setVoxel(int x, int y, int z, Voxel value);
@@ -67,6 +74,8 @@ public:
     Sides getEdgeChanged() { return edgeChanged; }
     void setEdgeChanged(Sides sides) { edgeChanged = sides; }
     void setNeedsSideOcclusionUpdate(bool value) { needsSideOcclusionUpdate = value; }
+
+    void print_info();
 
     // Obstructions for each side of the chunk (for proper culling with neighboring chunks)
     bool obstructions[6][CHUNK_SIZE][CHUNK_SIZE];

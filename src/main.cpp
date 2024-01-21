@@ -52,7 +52,6 @@ int main(int argc, char **argv)
         if (player.debugMode)
         {
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            log_debug("World tick : %d, loaded chunks %d", world.nTicks, world.getLoadedChunks());
         }
         else
         {

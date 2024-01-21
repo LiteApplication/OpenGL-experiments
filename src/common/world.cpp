@@ -154,10 +154,16 @@ void World::createChunk(ChunkPos pos)
         // Update the neighbor chunk
         neighbor->setNeedsSideOcclusionUpdate(true);
     }
+    chunk->setEdgeChanged(Side::NONE); // We just updated the neighbors, so no edge has changed
 }
 
 World::~World()
 {
+    for (auto &[pos, chunk] : chunks)
+    {
+        chunk->discard(); // Delete the buffers
+        delete chunk;
+    }
     chunks.clear();
 }
 
@@ -179,16 +185,11 @@ void World::loadChunks(int numberOfChunks)
 
 void World::updateSideOcclusion(int numberOfChunks)
 {
-    // Iterate through `chunks` and update the side occlusion of each chunk
+    int counter = numberOfChunks;
+    // First we update the side occlusion of the needed chunks so that we can
+    // update the side occlusion of the neighboring chunks later
     for (auto &[pos, chunk] : chunks)
     {
-        if (chunk->getNeedsSideOcclusionUpdate())
-        {
-            chunk->calculateNeedsDraw();
-            numberOfChunks--;
-            if (numberOfChunks == 0)
-                break;
-        }
         Sides edge = chunk->getEdgeChanged();
         if (edge == Side::NONE)
             continue;
@@ -212,6 +213,23 @@ void World::updateSideOcclusion(int numberOfChunks)
             neighbor->setNeedsSideOcclusionUpdate(true);
         }
         chunk->setEdgeChanged(Side::NONE);
+
+        counter--;
+        if (counter == 0)
+            break;
+    }
+
+    counter = numberOfChunks;
+    // Iterate through `chunks` and update the side occlusion of each chunk
+    for (auto &[pos, chunk] : chunks)
+    {
+        if (chunk->getNeedsSideOcclusionUpdate())
+        {
+            chunk->calculateNeedsDraw();
+            counter--;
+            if (counter == 0)
+                break;
+        }
     }
 }
 
@@ -329,7 +347,22 @@ void World::tick()
     ChunkPos newPlayerChunk = fromWorldPos(*playerPos);
     if (newPlayerChunk != playerChunk)
     {
-        (void)0;
+        if (!isChunkLoaded(newPlayerChunk))
+        {
+            createChunk(newPlayerChunk);
+            log_warn("Player moved to unloaded chunk (%d, %d, %d)", getX(newPlayerChunk), getY(newPlayerChunk), getZ(newPlayerChunk));
+        }
+
+        // Get the chunk and print its infos
+        Chunk *chunk = getChunk(newPlayerChunk);
+        if (chunk == nullptr)
+        {
+            log_warn("Player moved to unloaded chunk (%d, %d, %d)", getX(newPlayerChunk), getY(newPlayerChunk), getZ(newPlayerChunk));
+        }
+        else
+        {
+            chunk->print_info();
+        }
     }
 
     // Update the player position and chunk

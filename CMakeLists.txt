@@ -5,6 +5,13 @@ set(CMAKE_CXX_STANDARD 23)
 
 set(CMAKE_BUILD_TYPE Debug)
 
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+    # Print a message to the user to indicate that we are using ccache.
+    message(STATUS "Using ccache.")
+endif(CCACHE_FOUND)
+
 # The additional / is important to remove the last character from the path.
 # Note that it does not matter if the OS uses / or \, because we are only
 # saving the path size.

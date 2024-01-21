@@ -9,11 +9,11 @@ typedef Voxel ChunkData[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
 
 namespace WorldGenerator
 {
-    typedef std::function<void(ChunkPos, ChunkData)> function_t;
+    typedef std::function<void(ChunkPos, ChunkData, Voxel *, bool *)> function_t;
 
-    void singleBlock(ChunkPos pos, ChunkData voxels);
-    void flat(ChunkPos pos, ChunkData voxels);
-    void perlin(ChunkPos pos, ChunkData voxels);
+    void singleBlock(ChunkPos pos, ChunkData voxels, Voxel *simpleChunkVoxel, bool *isSimpleChunk);
+    void flat(ChunkPos pos, ChunkData voxels, Voxel *simpleChunkVoxel, bool *isSimpleChunk);
+    void perlin(ChunkPos pos, ChunkData voxels, Voxel *simpleChunkVoxel, bool *isSimpleChunk);
 
-    void full(ChunkPos pos, ChunkData voxels);
+    void full(ChunkPos pos, ChunkData voxels, Voxel *simpleChunkVoxel, bool *isSimpleChunk);
 } // namespace WorldGenerator
