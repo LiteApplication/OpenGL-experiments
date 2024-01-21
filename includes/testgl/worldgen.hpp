@@ -16,4 +16,5 @@ namespace WorldGenerator
     void perlin(ChunkPos pos, ChunkData voxels, Voxel *simpleChunkVoxel, bool *isSimpleChunk);
 
     void full(ChunkPos pos, ChunkData voxels, Voxel *simpleChunkVoxel, bool *isSimpleChunk);
+    void classic(ChunkPos pos, ChunkData voxels, Voxel *simpleChunkVoxel, bool *isSimpleChunk);
 } // namespace WorldGenerator

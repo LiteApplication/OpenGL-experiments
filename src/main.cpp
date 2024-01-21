@@ -30,7 +30,7 @@ int main(int argc, char **argv)
 
     // Create the world
     log_debug("Creating world");
-    World world(player.getPositionPtr(), WorldGenerator::perlin);
+    World world(player.getPositionPtr(), WorldGenerator::classic);
     if (GEN_ALL_CHUNKS_ON_START)
         world.loadAllChunks();
 
@@ -103,7 +103,11 @@ void tick_thread(World *world, Player *player, Window *window)
         previousTime = currentTime;
 
         // Wait for the next tick
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000 / TICKS_PER_SECOND - (int)(deltaTime * 1000)));
+        int delay = 1000 / TICKS_PER_SECOND - (int)(deltaTime * 1000);
+        if (delay > 0)
+            std::this_thread::sleep_for(std::chrono::milliseconds(delay));
+        else
+            log_warn("Tick took too long (%dms)", -delay);
 
         world->tick();
     }

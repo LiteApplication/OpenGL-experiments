@@ -1,6 +1,7 @@
 #version 330 core
 
-#define NUM_MATERIALS 3
+#define NUM_MATERIALS 255 // Can be reduced to 5 for now to save memory
+// Do not forget to increase if the type of the enum Voxel is changed.
 
 flat in int material; // Receive the color from the vertex shader
 flat in vec3 normal;

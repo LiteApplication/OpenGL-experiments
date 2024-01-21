@@ -1,6 +1,8 @@
 #include "testgl/sun.hpp"
-
+#include "testgl/constants.hpp"
 #include <glm/gtc/matrix_transform.hpp>
+
+#define SUN_HEIGHT 256.0f
 
 Sun::Sun(Shader *shader)
 {
@@ -8,12 +10,14 @@ Sun::Sun(Shader *shader)
 
     position = glm::vec3(0.0f, 0.0f, 0.0f);
     color = glm::vec3(1.0f, 1.0f, 1.0f);
-    ambient = 0.2f;
-    diffuse = 0.5f;
-    specular = 1.0f;
+    ambient = 0.5f;
+    diffuse = 0.6f;
+    specular = 0.8f;
 
     view = glm::mat4(1.0f);
     projection = glm::mat4(1.0f);
+
+    currentTime = 0.0f;
 
     shader->use();
     //  vec3 position;
@@ -32,10 +36,9 @@ Sun::~Sun()
 
 void Sun::update(float delta_time, glm::vec3 player_position)
 {
-    (void)delta_time;
+    currentTime += delta_time;
     // Update the position of the sun
-    position = player_position + glm::vec3(0.0f, 1024.0f, 0.0f);
-
+    position = player_position + glm::vec3(cos(currentTime / DAY_LENGTH / 10.0f * TWO_PI) * 25.0f, cos(currentTime / DAY_LENGTH * TWO_PI) * SUN_HEIGHT, sin(currentTime / DAY_LENGTH * TWO_PI) * SUN_HEIGHT);
     // Update the shader
     shader->use();
     shader->setVec3("light.position", position);

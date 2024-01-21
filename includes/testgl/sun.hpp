@@ -4,6 +4,8 @@
 
 #include <glm/glm.hpp>
 
+#define TWO_PI 6.28318530718f
+
 class Sun
 {
 private:
@@ -15,6 +17,8 @@ private:
 
     glm::mat4 view;
     glm::mat4 projection;
+
+    float currentTime;
 
     Shader *shader;
 

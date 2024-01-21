@@ -17,7 +17,9 @@
 
 #define GEN_ALL_CHUNKS_ON_START false
 
-#define TICKS_PER_SECOND 20
+#define TICKS_PER_SECOND 4
 #define CHUNK_GEN_PER_TICK 4
 #define CHUNK_MESH_PER_TICK 4
 #define CHUNK_GPU_UPLOAD_PER_FRAME 8
+
+#define DAY_LENGTH 300 // in seconds

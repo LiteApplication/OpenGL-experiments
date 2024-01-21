@@ -60,7 +60,7 @@ void Window::initGL()
     glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_MARKER, 0,
                          GL_DEBUG_SEVERITY_NOTIFICATION, -1, "Start debugging");
 
-    glClearColor(0.0f, 0.0f, 0.25f, 1.0f);
+    glClearColor(0.1f, 0.3f, 0.75f, 1.0f);
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
