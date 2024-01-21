@@ -8,6 +8,8 @@
 
 #include <glm/glm.hpp>
 
+class World;
+
 class Chunk
 {
 private:
@@ -36,11 +38,12 @@ private:
     Sides edgeChanged;
 
     bool scheduledForDeletion;
+    World *world;
 
 public:
     Chunk() = default;
     // Coordinates of the chunk in the world (in chunks)
-    Chunk(int x, int y, int z);
+    Chunk(int x, int y, int z, World *world);
     ~Chunk();
 
     bool isEmpty() { return isSimpleChunk && simpleChunkVoxel == VOXEL_NONE; }

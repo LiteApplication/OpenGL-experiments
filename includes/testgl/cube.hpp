@@ -4,8 +4,9 @@
 #include <vector>
 #include <tuple>
 
+#include "testgl/chunkpos.hpp"
+
 typedef unsigned char Sides;
-typedef std::tuple<int, int, int> ChunkPos;
 
 enum Side : Sides
 {

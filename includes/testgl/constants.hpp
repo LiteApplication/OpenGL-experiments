@@ -5,7 +5,7 @@
 #define WINDOW_WIDTH 800
 
 #define GLFW_VSYNC 1 // 0 = off, 1 = on
-#define CAPTURE_MOUSE true
+#define CAPTURE_MOUSE false
 
 #ifndef NDEBUG
 #define GLFW_REQUEST_DEBUG_CONTEXT true

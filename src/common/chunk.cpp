@@ -4,8 +4,9 @@
 #include "testgl/constants.hpp"
 #include "testgl/voxel.hpp"
 #include "testgl/cube.hpp"
+#include "testgl/world.hpp"
 
-Chunk::Chunk(int x, int y, int z) : m_x(x), m_y(y), m_z(z), meshSize(0), VAO(0), VBO(0), EBO(0)
+Chunk::Chunk(int x, int y, int z, World *world) : VAO(0), VBO(0), EBO(0), world(world)
 {
     m_x = x;
     m_y = y;
@@ -99,6 +100,7 @@ void Chunk::setVoxel(int x, int y, int z, Voxel value)
                 }
             }
             needsMeshUpdate = true;
+            world->addToMeshQueue(this);
         }
     }
     // Check if the voxel is actually changing
@@ -124,9 +126,13 @@ void Chunk::setVoxel(int x, int y, int z, Voxel value)
             edgeChanged |= Side::FRONT;
 
         needsSideOcclusionUpdate = true;
+        world->addToFaceOcclusionQueue(this);
     }
     else
+    {
         needsMeshUpdate = true; // Skip side occlusion update
+        world->addToMeshQueue(this);
+    }
 
     voxels[x][y][z] = value;
 }
@@ -135,6 +141,7 @@ void Chunk::populate(WorldGenerator::function_t worldGenerator)
 {
     worldGenerator(getPos(), voxels, &simpleChunkVoxel, &isSimpleChunk);
     needsSideOcclusionUpdate = true; // we now need to calculate which sides are worth drawing
+    world->addToFaceOcclusionQueue(this);
 }
 
 void Chunk::setVoxelLayer(int y, Voxel value)
@@ -163,6 +170,7 @@ void Chunk::setVoxelLayer(int y, Voxel value)
         }
     }
     needsSideOcclusionUpdate = true;
+    world->addToFaceOcclusionQueue(this);
     edgeChanged |= Side::LEFT | Side::RIGHT | Side::FRONT | Side::BACK;
     if (y == 0)
         edgeChanged |= Side::BOTTOM;
@@ -193,6 +201,7 @@ void Chunk::calculateNeedsDraw()
         if (simpleChunkVoxel == VOXEL_NONE)
         {
             needsMeshUpdate = true;
+            world->addToMeshQueue(this);
             return;
         }
         for (int x = 0; x < CHUNK_SIZE; x++)
@@ -220,6 +229,7 @@ void Chunk::calculateNeedsDraw()
             }
         }
         needsMeshUpdate = true;
+        world->addToMeshQueue(this);
         return;
     }
 
@@ -249,6 +259,7 @@ void Chunk::calculateNeedsDraw()
     }
 
     needsMeshUpdate = true;
+    world->addToMeshQueue(this);
 }
 
 void Chunk::getObstructions(Side side, bool obstructions[CHUNK_SIZE][CHUNK_SIZE])
@@ -339,6 +350,7 @@ void Chunk::generateMesh()
     meshSize = meshVertices.size() / 3;
 
     needsMeshUpload = true;
+    world->addToUploadQueue(this);
 }
 
 void Chunk::uploadMesh()

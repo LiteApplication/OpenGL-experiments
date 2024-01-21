@@ -2,108 +2,33 @@
 
 #define VIEW_DISTANCE_2 VIEW_DISTANCE *VIEW_DISTANCE
 
-namespace ChunkPosTools
-{
-
-    int squaredDist(ChunkPos pos1, ChunkPos pos2)
-    {
-        ChunkPos delta = pos1 - pos2;
-        int x2 = getX(delta);
-        int y2 = getY(delta);
-        int z2 = getZ(delta);
-        return x2 * x2 + y2 * y2 + z2 * z2;
-    }
-
-    bool chunkTooFar(ChunkPos pos, ChunkPos playerPos)
-    {
-        return abs(getX(pos) - getX(playerPos)) > VIEW_DISTANCE || abs(getY(pos) - getY(playerPos)) > VIEW_DISTANCE || abs(getZ(pos) - getZ(playerPos)) > VIEW_DISTANCE;
-    }
-
-    ChunkPos fromWorldPos(int x, int y, int z)
-    {
-        // We cannot just divide by CHUNK_SIZE because it would round towards 0
-        // We need to round down
-        int x2 = x < 0 ? (x - CHUNK_SIZE + 1) / CHUNK_SIZE : x / CHUNK_SIZE;
-        int y2 = y < 0 ? (y - CHUNK_SIZE + 1) / CHUNK_SIZE : y / CHUNK_SIZE;
-        int z2 = z < 0 ? (z - CHUNK_SIZE + 1) / CHUNK_SIZE : z / CHUNK_SIZE;
-        return ChunkPos(x2, y2, z2);
-    }
-
-    ChunkPos fromWorldPos(glm::vec3 pos)
-    {
-        return fromWorldPos(pos.x, pos.y, pos.z);
-    }
-
-    glm::vec3 toWorldPos(ChunkPos pos)
-    {
-        return glm::vec3(getX(pos) * CHUNK_SIZE, getY(pos) * CHUNK_SIZE, getZ(pos) * CHUNK_SIZE);
-    }
-
-    bool operator==(ChunkPos a, ChunkPos b)
-    {
-        return getX(a) == getX(b) && getY(a) == getY(b) && getZ(a) == getZ(b);
-    }
-
-    bool operator!=(ChunkPos a, ChunkPos b)
-    {
-        return !(a == b);
-    }
-
-    ChunkPos operator+(ChunkPos a, ChunkPos b)
-    {
-        return ChunkPos(getX(a) + getX(b), getY(a) + getY(b), getZ(a) + getZ(b));
-    }
-
-    ChunkPos operator-(ChunkPos a, ChunkPos b)
-    {
-        return ChunkPos(getX(a) - getX(b), getY(a) - getY(b), getZ(a) - getZ(b));
-    }
-
-    int getX(ChunkPos pos)
-    {
-        return std::get<0>(pos);
-    }
-
-    int getY(ChunkPos pos)
-    {
-        return std::get<1>(pos);
-    }
-
-    int getZ(ChunkPos pos)
-    {
-        return std::get<2>(pos);
-    }
-} // namespace ChunkPosTools
-
 using namespace ChunkPosTools;
 
-ChunkPos World::nextChunkToLoad()
+void World::nextChunkToLoad()
 {
     // Load a square of chunks around the player
     // The square is centered on the player
     // The square is of size 2 * VIEW_DISTANCE + 1
 
-    // Load closest chunks first
-    for (int dist = 0; dist <= VIEW_DISTANCE; dist++)
+    // Clear the load queue
+    std::priority_queue<ChunkPosWithDist, std::vector<ChunkPosWithDist>, ChunkPosWithDistCompare> empty;
+    std::swap(chunksToLoad, empty);
+
+    for (int x = -VIEW_DISTANCE; x <= VIEW_DISTANCE; x++)
     {
-        // Load the chunks on the edges
-        for (int x = -dist; x <= dist; x++)
+        for (int y = -VIEW_DISTANCE / HEIGHT_VIEW_REDUCTION; y <= VIEW_DISTANCE / HEIGHT_VIEW_REDUCTION; y++)
         {
-            for (int y = -dist / HEIGHT_VIEW_REDUCTION; y <= dist / HEIGHT_VIEW_REDUCTION; y++)
+            for (int z = -VIEW_DISTANCE; z <= VIEW_DISTANCE; z++)
             {
-                for (int z = -dist; z <= dist; z++)
-                {
-                    // Skip the corners
-                    if (abs(x) == dist && abs(y) == dist / HEIGHT_VIEW_REDUCTION && abs(z) == dist)
-                        continue;
-                    ChunkPos pos = playerChunk + ChunkPos(x, y, z);
-                    if (!isChunkLoaded(pos))
-                        return pos;
-                }
+                // Skip the corners
+                if (abs(x) == VIEW_DISTANCE && abs(y) == VIEW_DISTANCE / HEIGHT_VIEW_REDUCTION && abs(z) == VIEW_DISTANCE)
+                    continue;
+                ChunkPos pos = playerChunk + ChunkPos(x, y, z);
+                if (!isChunkLoaded(pos))
+                    addToLoadQueue(pos);
             }
         }
     }
-    return playerChunk;
 }
 
 bool World::isChunkLoaded(ChunkPos pos)
@@ -111,9 +36,10 @@ bool World::isChunkLoaded(ChunkPos pos)
     return chunks.find(pos) != chunks.end();
 }
 
-World::World(glm::vec3 *playerPos, WorldGenerator::function_t worldGenerator) : playerPos(playerPos), chunks(), worldGenerator(worldGenerator)
+World::World(glm::vec3 *playerPos, WorldGenerator::function_t worldGenerator) : playerPos(playerPos), chunks(), worldGenerator(worldGenerator), nTicks(0)
 {
     playerChunk = fromWorldPos(*playerPos);
+    chunksToLoad.push(makeChunkPosWithDist(playerChunk));
 }
 
 Chunk *World::getChunk(ChunkPos pos)
@@ -131,7 +57,7 @@ void World::createChunk(ChunkPos pos)
         return;
     }
     // log_debug("Creating chunk (%d, %d, %d)", getX(pos), getY(pos), getZ(pos));
-    Chunk *chunk = new Chunk(getX(pos), getY(pos), getZ(pos));
+    Chunk *chunk = new Chunk(getX(pos), getY(pos), getZ(pos), this);
     chunksMutex.lock();
     chunks[pos] = chunk;
     chunksMutex.unlock();
@@ -153,6 +79,7 @@ void World::createChunk(ChunkPos pos)
         neighbor->getObstructions(oppositeSide, chunk->obstructions[side_to_index(sideEnum)]);
         // Update the neighbor chunk
         neighbor->setNeedsSideOcclusionUpdate(true);
+        addToFaceOcclusionQueue(neighbor);
     }
     chunk->setEdgeChanged(Side::NONE); // We just updated the neighbors, so no edge has changed
 }
@@ -167,19 +94,72 @@ World::~World()
     chunks.clear();
 }
 
+int World::distanceFunction(ChunkPos pos)
+{
+    ChunkPos relativePos = pos - playerChunk;
+    // Negative distance so that the chunks are sorted from closest to farthest
+    return -(getX(relativePos) * getX(relativePos) + getY(relativePos) * getY(relativePos) + getZ(relativePos) * getZ(relativePos));
+}
+
+int World::distanceFunction(Chunk *chunk)
+{
+    return distanceFunction(chunk->getPos());
+}
+
+World::ChunkPosWithDist World::makeChunkPosWithDist(ChunkPos pos)
+{
+    return ChunkPosWithDist(pos, distanceFunction(pos));
+}
+
+World::ChunkWithDist World::makeChunkWithDist(Chunk *chunk)
+{
+    return ChunkWithDist(chunk, distanceFunction(chunk));
+}
+void World::addToLoadQueue(ChunkPos pos)
+{
+    chunksToLoad.push(makeChunkPosWithDist(pos));
+}
+
+void World::addToFaceOcclusionQueue(Chunk *chunk)
+{
+    chunksToFaceOcclude.push(makeChunkWithDist(chunk));
+}
+
+void World::addToMeshQueue(Chunk *chunk)
+{
+    chunksToMesh.push(makeChunkWithDist(chunk));
+}
+
+void World::addToUploadQueue(Chunk *chunk)
+{
+    // This will be popped by the main thread so we need to protect it
+    chunksToUploadMutex.lock();
+    chunksToUpload.push(makeChunkWithDist(chunk));
+    chunksToUploadMutex.unlock();
+}
+
 void World::loadChunks(int numberOfChunks)
 {
     // Always load the chunk the player is in
     if (!isChunkLoaded(playerChunk))
     {
         createChunk(playerChunk);
+        numberOfChunks--;
     }
-    for (int i = 0; i < numberOfChunks; i++)
+    nextChunkToLoad();
+    // Iterate through `chunks` and load each chunk
+    while (!chunksToLoad.empty())
     {
-        ChunkPos pos = nextChunkToLoad();
-        if (pos == playerChunk)
-            return; // We're done
-        createChunk(pos);
+        ChunkPos pos = chunksToLoad.top().first;
+        chunksToLoad.pop();
+
+        if (!isChunkLoaded(pos))
+        {
+            createChunk(pos);
+            numberOfChunks--;
+            if (numberOfChunks == 0)
+                break;
+        }
     }
 }
 
@@ -211,6 +191,7 @@ void World::updateSideOcclusion(int numberOfChunks)
             chunk->getObstructions(sideEnum, neighbor->obstructions[side]);
             // Update the neighbor chunk
             neighbor->setNeedsSideOcclusionUpdate(true);
+            addToFaceOcclusionQueue(neighbor);
         }
         chunk->setEdgeChanged(Side::NONE);
 
@@ -221,8 +202,12 @@ void World::updateSideOcclusion(int numberOfChunks)
 
     counter = numberOfChunks;
     // Iterate through `chunks` and update the side occlusion of each chunk
-    for (auto &[pos, chunk] : chunks)
+    while (!chunksToFaceOcclude.empty())
     {
+        Chunk *chunk = chunksToFaceOcclude.top().first;
+        chunksToFaceOcclude.pop();
+        if (chunk == nullptr)
+            continue;
         if (chunk->getNeedsSideOcclusionUpdate())
         {
             chunk->calculateNeedsDraw();
@@ -236,8 +221,12 @@ void World::updateSideOcclusion(int numberOfChunks)
 void World::updateMesh(int numberOfChunks)
 {
     // Iterate through `chunks` and update the mesh of each chunk
-    for (auto &[pos, chunk] : chunks)
+    while (!chunksToMesh.empty())
     {
+        Chunk *chunk = chunksToMesh.top().first;
+        chunksToMesh.pop();
+        if (chunk == nullptr)
+            continue;
         if (chunk->getNeedsMeshUpdate())
         {
             chunk->generateMesh();
@@ -251,8 +240,14 @@ void World::updateMesh(int numberOfChunks)
 void World::uploadMesh(int numberOfChunks)
 {
     // Iterate through `chunks` and upload the mesh of each chunk
-    for (auto &[pos, chunk] : chunks)
+    // TODO: Use a mutex to protect the queue
+    chunksToUploadMutex.lock();
+    while (!chunksToUpload.empty())
     {
+        Chunk *chunk = chunksToUpload.top().first;
+        chunksToUpload.pop();
+        if (chunk == nullptr)
+            continue;
         if (chunk->getNeedsMeshUpload())
         {
             chunk->uploadMesh();
@@ -261,6 +256,7 @@ void World::uploadMesh(int numberOfChunks)
                 break;
         }
     }
+    chunksToUploadMutex.unlock();
 }
 
 void World::discardChunks()
@@ -271,6 +267,20 @@ void World::discardChunks()
         if (chunkTooFar(pos, playerChunk))
             chunk->discard();
     }
+}
+// https://stackoverflow.com/a/29325258/15860367
+// Provides access to the container of the priority_queue
+template <class ADAPTER>
+typename ADAPTER::container_type &get_container(ADAPTER &a)
+{
+    struct hack : ADAPTER
+    {
+        static typename ADAPTER::container_type &get(ADAPTER &a)
+        {
+            return a.*&hack::c;
+        }
+    };
+    return hack::get(a);
 }
 
 void World::deleteChunks()
@@ -284,6 +294,37 @@ void World::deleteChunks()
     if (!needsDeletion)
         return;
 
+    // Iterate through all the queued chunks and replace them with nullptr
+    // This is done to prevent the tick thread to update a chunk that is no longer in the world
+    std::vector<ChunkWithDist> &chunksToFaceOccludeContainer = get_container(chunksToFaceOcclude);
+    for (auto &chunk : chunksToFaceOccludeContainer)
+    {
+        if (chunk.first == nullptr)
+            continue;
+        if (chunk.first->getScheduleForDeletion())
+            chunk.first = nullptr;
+    }
+    std::vector<ChunkWithDist> &chunksToMeshContainer = get_container(chunksToMesh);
+    for (auto &chunk : chunksToMeshContainer)
+    {
+        if (chunk.first == nullptr)
+            continue;
+        if (chunk.first->getScheduleForDeletion())
+            chunk.first = nullptr;
+    }
+
+    chunksToUploadMutex.lock();
+    std::vector<ChunkWithDist> &chunksToUploadContainer = get_container(chunksToUpload);
+    for (auto &chunk : chunksToUploadContainer)
+    {
+        if (chunk.first == nullptr)
+            continue;
+        if (chunk.first->getScheduleForDeletion())
+            chunk.first = nullptr;
+    }
+    chunksToUploadMutex.unlock();
+
+    // Delete the chunks that are scheduled for deletion
     chunksMutex.lock();
     for (auto it = chunks.begin(); it != chunks.end();)
     {

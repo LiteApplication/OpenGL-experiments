@@ -3,6 +3,7 @@
 #include <map>
 #include <tuple>
 #include <mutex>
+#include <queue>
 #include <glm/glm.hpp>
 #include <glm/gtx/norm.hpp>
 
@@ -11,43 +12,6 @@
 #include "testgl/worldgen.hpp"
 
 class Chunk;
-
-typedef std::tuple<int, int, int>
-    ChunkPos;
-
-namespace ChunkPosTools
-{
-
-    // Convert world coordinates to chunk coordinates
-    ChunkPos fromWorldPos(int x, int y, int z);
-    // Convert world coordinates to chunk coordinates
-    ChunkPos fromWorldPos(glm::vec3 pos);
-    // Convert chunk coordinates to world coordinates
-    glm::vec3 toWorldPos(ChunkPos pos);
-
-    // Get the squared distance between a chunk and the player
-    int squaredDist(ChunkPos pos, glm::vec3 *playerPos);
-
-    // Getters
-    int getX(ChunkPos);
-    int getY(ChunkPos);
-    int getZ(ChunkPos);
-
-    // Operators
-    bool operator==(ChunkPos, ChunkPos);
-    bool operator!=(ChunkPos, ChunkPos);
-    ChunkPos operator+(ChunkPos, ChunkPos);
-    ChunkPos operator-(ChunkPos, ChunkPos);
-
-    // Hash function for ChunkPos
-    struct ChunkPosHash
-    {
-        std::size_t operator()(const ChunkPos &k) const
-        {
-            return std::hash<int>()(getX(k)) ^ std::hash<int>()(getY(k)) ^ std::hash<int>()(getZ(k));
-        }
-    };
-}
 
 class World
 {
@@ -66,8 +30,8 @@ private:
     // World generation function
     WorldGenerator::function_t worldGenerator;
 
-    // Return the position of the next chunk to load based on the current player position
-    ChunkPos nextChunkToLoad();
+    // Fill the priority queue with chunks to load
+    void nextChunkToLoad();
 
     // Get the chunk at a certain position
     Chunk *getChunk(ChunkPos pos);
@@ -77,6 +41,44 @@ private:
     // No mesh or block occlusion will be calculated
     // The chunk has to be within the render distance of the player
     void createChunk(ChunkPos pos);
+
+    // Loading priority stuff:
+    typedef std::pair<ChunkPos, int> ChunkPosWithDist; // ChunkPos with distance from player
+    typedef std::pair<Chunk *, int> ChunkWithDist;     // Chunk with distance from player
+    // Comparison function for the priority queues
+    struct ChunkWithDistCompare
+    {
+        bool operator()(const ChunkWithDist &a, const ChunkWithDist &b)
+        {
+            return a.second < b.second;
+        }
+    };
+
+    // Comparison function for the priority queues
+    struct ChunkPosWithDistCompare
+    {
+        bool operator()(const ChunkPosWithDist &a, const ChunkPosWithDist &b)
+        {
+            return a.second < b.second;
+        }
+    };
+    // The queue of chunks to be loaded
+    std::priority_queue<ChunkPosWithDist, std::vector<ChunkPosWithDist>, ChunkPosWithDistCompare> chunksToLoad;
+    // The queue of chunks to be face occluded
+    std::priority_queue<ChunkWithDist, std::vector<ChunkWithDist>, ChunkWithDistCompare> chunksToFaceOcclude;
+    // The queue of chunks to be meshed
+    std::priority_queue<ChunkWithDist, std::vector<ChunkWithDist>, ChunkWithDistCompare> chunksToMesh;
+    // The queue of chunks to be uploaded
+    std::mutex chunksToUploadMutex;
+    std::priority_queue<ChunkWithDist, std::vector<ChunkWithDist>, ChunkWithDistCompare> chunksToUpload;
+
+    // Fast distance² calculation
+    int distanceFunction(ChunkPos pos);
+    int distanceFunction(Chunk *chunk);
+
+    // Make elements of the priority queues
+    ChunkPosWithDist makeChunkPosWithDist(ChunkPos pos);
+    ChunkWithDist makeChunkWithDist(Chunk *chunk);
 
 public:
     // World constructor
@@ -137,4 +139,11 @@ public:
 
     // Number of loaded chunks
     int getLoadedChunks() { return chunks.size(); }
+
+    // Put functions for the priority queues here
+    // They are public so they can be used by the chunks themselves
+    void addToLoadQueue(ChunkPos pos);
+    void addToFaceOcclusionQueue(Chunk *chunk);
+    void addToMeshQueue(Chunk *chunk);
+    void addToUploadQueue(Chunk *chunk);
 };

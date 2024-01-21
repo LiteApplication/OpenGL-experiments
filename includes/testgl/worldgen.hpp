@@ -3,8 +3,8 @@
 #include <functional>
 #include "testgl/constants.hpp"
 #include "testgl/voxel.hpp"
+#include "testgl/chunkpos.hpp"
 
-typedef std::tuple<int, int, int> ChunkPos;
 typedef Voxel ChunkData[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
 
 namespace WorldGenerator

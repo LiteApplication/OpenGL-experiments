@@ -3,7 +3,15 @@
 
 #include "FastNoise.hpp"
 
-#define clamp(x, a, b) (x < a ? a : (x > b ? b : x))
+// Avoid calling a multiple times
+#define clamp(x, a, b) \
+    ({typeof(x) _x = (x); \
+     typeof(a) _a = (a); \
+     typeof(b) _b = (b); \
+     _x < _a\
+                             ? _a\
+                         : _x > _b ? _b\
+                                   : _x; })
 namespace WorldGenerator
 {
     void singleBlock(ChunkPos pos, Voxel voxels[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE], Voxel *simpleChunkVoxel, bool *isSimpleChunk)
