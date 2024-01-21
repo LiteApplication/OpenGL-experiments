@@ -15,7 +15,7 @@ const std::string reset("\033[0m");
 #pragma message("SOURCE_PATH_SIZE not defined, use CMakeLists.txt")
 #define SOURCE_PATH_SIZE 0
 #endif
-#define __FILENAME__ (__FILE__ + SOURCE_PATH_SIZE)
+#define __FILENAME__ (__FILE__ + SOURCE_PATH_SIZE) // Strip source path from __FILE__
 
 #define log_info(...) logging_utils::info(__FILENAME__, __LINE__, __VA_ARGS__)
 #define log_warn(...) logging_utils::warn(__FILENAME__, __LINE__, __VA_ARGS__)

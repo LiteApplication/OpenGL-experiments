@@ -17,7 +17,7 @@ namespace WorldGenerator
     void singleBlock(ChunkPos pos, Voxel voxels[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE], Voxel *simpleChunkVoxel, bool *isSimpleChunk)
     {
         *isSimpleChunk = false;
-        voxels[0][0][0] = VOXEL_BROWN;
+        voxels[0][0][0] = Voxel::Dirt;
     }
 
     void flat(ChunkPos pos, Voxel voxels[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE], Voxel *simpleChunkVoxel, bool *isSimpleChunk)
@@ -27,7 +27,7 @@ namespace WorldGenerator
         {
             for (int z = 0; z < CHUNK_SIZE; z++)
             {
-                voxels[x][0][z] = (x + z) % 4 + 1;
+                voxels[x][0][z] = Voxel::Grass;
             }
         }
     }
@@ -58,7 +58,7 @@ namespace WorldGenerator
         if (heightTest == 0 || heightTest == CHUNK_SIZE)
         {
             *isSimpleChunk = true;
-            *simpleChunkVoxel = heightTest == 0 ? VOXEL_NONE : VOXEL_BROWN;
+            *simpleChunkVoxel = heightTest == 0 ? Voxel::Air : Voxel::Dirt;
             for (int x = 0; x < CHUNK_SIZE; x++)
             {
                 for (int z = 0; z < CHUNK_SIZE; z++)
@@ -85,7 +85,7 @@ namespace WorldGenerator
             {
                 for (int y = 0; y < height[x][z]; y++)
                 {
-                    voxels[x][y][z] = VOXEL_BROWN;
+                    voxels[x][y][z] = Voxel::Dirt;
                 }
             }
         }
@@ -93,7 +93,7 @@ namespace WorldGenerator
     void full(ChunkPos pos, Voxel voxels[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE], Voxel *simpleChunkVoxel, bool *isSimpleChunk)
     {
         *isSimpleChunk = true;
-        *simpleChunkVoxel = VOXEL_BROWN;
+        *simpleChunkVoxel = Voxel::Dirt;
     }
 
 } // namespace WorldGenerator

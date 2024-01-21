@@ -33,6 +33,7 @@ void World::nextChunkToLoad()
 
 bool World::isChunkLoaded(ChunkPos pos)
 {
+    // Check if the chunk is inside the chunk map
     return chunks.find(pos) != chunks.end();
 }
 
@@ -98,7 +99,8 @@ int World::distanceFunction(ChunkPos pos)
 {
     ChunkPos relativePos = pos - playerChunk;
     // Negative distance so that the chunks are sorted from closest to farthest
-    return -(getX(relativePos) * getX(relativePos) + getY(relativePos) * getY(relativePos) + getZ(relativePos) * getZ(relativePos));
+    int dist = -(getX(relativePos) * getX(relativePos) + getY(relativePos) * getY(relativePos) + getZ(relativePos) * getZ(relativePos));
+    return dist;
 }
 
 int World::distanceFunction(Chunk *chunk)
@@ -240,7 +242,6 @@ void World::updateMesh(int numberOfChunks)
 void World::uploadMesh(int numberOfChunks)
 {
     // Iterate through `chunks` and upload the mesh of each chunk
-    // TODO: Use a mutex to protect the queue
     chunksToUploadMutex.lock();
     while (!chunksToUpload.empty())
     {
@@ -364,7 +365,7 @@ Voxel World::getVoxel(int x, int y, int z)
     ChunkPos chunkPos = fromWorldPos(x, y, z);
     Chunk *chunk = getChunk(chunkPos);
     if (chunk == nullptr)
-        return VOXEL_INVALID;
+        return Voxel::Air;
     return chunk->getVoxel(x % CHUNK_SIZE, y % CHUNK_SIZE, z % CHUNK_SIZE);
 }
 
@@ -396,11 +397,7 @@ void World::tick()
 
         // Get the chunk and print its infos
         Chunk *chunk = getChunk(newPlayerChunk);
-        if (chunk == nullptr)
-        {
-            log_warn("Player moved to unloaded chunk (%d, %d, %d)", getX(newPlayerChunk), getY(newPlayerChunk), getZ(newPlayerChunk));
-        }
-        else
+        if (chunk != nullptr)
         {
             chunk->print_info();
         }

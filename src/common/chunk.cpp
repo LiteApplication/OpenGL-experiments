@@ -30,14 +30,14 @@ Chunk::Chunk(int x, int y, int z, World *world) : VAO(0), VBO(0), EBO(0), world(
         {
             for (int k = 0; k < CHUNK_SIZE; k++)
             {
-                voxels[i][j][k] = VOXEL_NONE;
+                voxels[i][j][k] = Voxel::Air;
                 needsDraw[i][j][k] = Side::NONE;
             }
         }
     }
 
     isSimpleChunk = true;
-    simpleChunkVoxel = VOXEL_NONE;
+    simpleChunkVoxel = Voxel::Air;
 
     edgeChanged = Side::NONE;
 
@@ -69,7 +69,7 @@ Voxel Chunk::getVoxel(int x, int y, int z)
     if (x < 0 || x >= CHUNK_SIZE || y < 0 || y >= CHUNK_SIZE || z < 0 || z >= CHUNK_SIZE)
     {
         log_warn("getVoxel : out of bounds (%d, %d, %d)", x, y, z);
-        return VOXEL_INVALID;
+        return Voxel::Air;
     }
     return voxels[x][y][z];
 }
@@ -108,7 +108,7 @@ void Chunk::setVoxel(int x, int y, int z, Voxel value)
         return;
 
     // Check if the voxel is on the edge of the chunk if the mesh shape changes
-    if (value == VOXEL_NONE != voxels[x][y][z] == VOXEL_NONE) // XOR
+    if (value == Voxel::Air != voxels[x][y][z] == Voxel::Air) // XOR
     {
         if (x == 0)
             edgeChanged |= Side::LEFT;
@@ -198,7 +198,7 @@ void Chunk::calculateNeedsDraw()
 
     if (isSimpleChunk)
     {
-        if (simpleChunkVoxel == VOXEL_NONE)
+        if (simpleChunkVoxel == Voxel::Air)
         {
             needsMeshUpdate = true;
             world->addToMeshQueue(this);
@@ -239,20 +239,20 @@ void Chunk::calculateNeedsDraw()
         {
             for (int z = 0; z < CHUNK_SIZE; z++)
             {
-                if (getVoxel(x, y, z) == VOXEL_NONE)
+                if (getVoxel(x, y, z) == Voxel::Air)
                     continue;
 
-                if ((z == CHUNK_SIZE - 1 && !obstructions[0][x][y]) || (z != CHUNK_SIZE - 1 && getVoxel(x, y, z + 1) == VOXEL_NONE))
+                if ((z == CHUNK_SIZE - 1 && !obstructions[0][x][y]) || (z != CHUNK_SIZE - 1 && getVoxel(x, y, z + 1) == Voxel::Air))
                     needsDraw[x][y][z] |= Side::FRONT;
-                if ((z == 0 && !obstructions[1][x][y]) || (z != 0 && getVoxel(x, y, z - 1) == VOXEL_NONE))
+                if ((z == 0 && !obstructions[1][x][y]) || (z != 0 && getVoxel(x, y, z - 1) == Voxel::Air))
                     needsDraw[x][y][z] |= Side::BACK;
-                if ((x == 0 && !obstructions[2][y][z]) || (x != 0 && getVoxel(x - 1, y, z) == VOXEL_NONE))
+                if ((x == 0 && !obstructions[2][y][z]) || (x != 0 && getVoxel(x - 1, y, z) == Voxel::Air))
                     needsDraw[x][y][z] |= Side::LEFT;
-                if ((x == CHUNK_SIZE - 1 && !obstructions[3][y][z]) || (x != CHUNK_SIZE - 1 && getVoxel(x + 1, y, z) == VOXEL_NONE))
+                if ((x == CHUNK_SIZE - 1 && !obstructions[3][y][z]) || (x != CHUNK_SIZE - 1 && getVoxel(x + 1, y, z) == Voxel::Air))
                     needsDraw[x][y][z] |= Side::RIGHT;
-                if ((y == CHUNK_SIZE - 1 && !obstructions[4][x][z]) || (y != CHUNK_SIZE - 1 && getVoxel(x, y + 1, z) == VOXEL_NONE))
+                if ((y == CHUNK_SIZE - 1 && !obstructions[4][x][z]) || (y != CHUNK_SIZE - 1 && getVoxel(x, y + 1, z) == Voxel::Air))
                     needsDraw[x][y][z] |= Side::TOP;
-                if ((y == 0 && !obstructions[5][x][z]) || (y != 0 && getVoxel(x, y - 1, z) == VOXEL_NONE))
+                if ((y == 0 && !obstructions[5][x][z]) || (y != 0 && getVoxel(x, y - 1, z) == Voxel::Air))
                     needsDraw[x][y][z] |= Side::BOTTOM;
             }
         }
@@ -269,7 +269,7 @@ void Chunk::getObstructions(Side side, bool obstructions[CHUNK_SIZE][CHUNK_SIZE]
 
     if (isSimpleChunk)
     {
-        bool obstructed = simpleChunkVoxel != VOXEL_NONE;
+        bool obstructed = simpleChunkVoxel != Voxel::Air;
         for (int i = 0; i < CHUNK_SIZE; i++)
         {
             for (int j = 0; j < CHUNK_SIZE; j++)
@@ -287,26 +287,26 @@ void Chunk::getObstructions(Side side, bool obstructions[CHUNK_SIZE][CHUNK_SIZE]
             switch (side)
             {
             case Side::FRONT: // Z = CHUNK_SIZE - 1
-                obstructed = voxels[i][j][CHUNK_SIZE - 1] != VOXEL_NONE;
+                obstructed = voxels[i][j][CHUNK_SIZE - 1] != Voxel::Air;
                 break;
             case Side::BACK: // Z = 0
-                obstructed = voxels[i][j][0] != VOXEL_NONE;
+                obstructed = voxels[i][j][0] != Voxel::Air;
                 break;
 
             case Side::LEFT: // X = 0
-                obstructed = voxels[0][i][j] != VOXEL_NONE;
+                obstructed = voxels[0][i][j] != Voxel::Air;
                 break;
 
             case Side::RIGHT: // X = CHUNK_SIZE - 1
-                obstructed = voxels[CHUNK_SIZE - 1][i][j] != VOXEL_NONE;
+                obstructed = voxels[CHUNK_SIZE - 1][i][j] != Voxel::Air;
                 break;
 
             case Side::TOP: // Y = CHUNK_SIZE - 1
-                obstructed = voxels[i][CHUNK_SIZE - 1][j] != VOXEL_NONE;
+                obstructed = voxels[i][CHUNK_SIZE - 1][j] != Voxel::Air;
                 break;
 
             case Side::BOTTOM: // Y = 0
-                obstructed = voxels[i][0][j] != VOXEL_NONE;
+                obstructed = voxels[i][0][j] != Voxel::Air;
                 break;
 
             default:
@@ -333,7 +333,7 @@ void Chunk::generateMesh()
         {
             for (int k = 0; k < CHUNK_SIZE; k++)
             {
-                if (getVoxel(i, j, k) == VOXEL_NONE)
+                if (getVoxel(i, j, k) == Voxel::Air)
                     continue;
 
                 std::vector<float> faces_vec = CubeMeshSides::faces_at(i, j, k, needsDraw[i][j][k]);
@@ -343,6 +343,12 @@ void Chunk::generateMesh()
                 {
                     meshColors.push_back(getVoxel(i, j, k));
                 }
+
+                // Use normals_on to append the normals to the meshNormals vector
+                // Expand the meshNormals vector to make room for the new normals
+                int prevSize = meshNormals.size();
+                meshNormals.resize(prevSize + faces_vec.size());
+                CubeMeshSides::normals_on(needsDraw[i][j][k], &meshNormals[prevSize]);
             }
         }
     }
@@ -368,10 +374,11 @@ void Chunk::uploadMesh()
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // Make room for 3 floats coords and 1 int color per vertex
-    glBufferData(GL_ARRAY_BUFFER, meshSize * (3 * sizeof(float) + sizeof(int)), NULL, GL_DYNAMIC_DRAW);
+    // Make room for 3 floats coords , 1 int color and 3 floats normals
+    glBufferData(GL_ARRAY_BUFFER, meshSize * (3 * sizeof(float) + sizeof(int) + 3 * sizeof(float)), NULL, GL_DYNAMIC_DRAW);
     glBufferSubData(GL_ARRAY_BUFFER, 0, meshSize * 3 * sizeof(float), meshVertices.data());
     glBufferSubData(GL_ARRAY_BUFFER, meshSize * 3 * sizeof(float), meshSize * sizeof(int), meshColors.data());
+    glBufferSubData(GL_ARRAY_BUFFER, meshSize * (3 * sizeof(float) + sizeof(int)), meshSize * 3 * sizeof(float), meshNormals.data());
 
     // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     // glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshIndices.size() * sizeof(unsigned int), meshIndices.data(), GL_STATIC_DRAW);
@@ -383,6 +390,10 @@ void Chunk::uploadMesh()
     // Color attribute
     glVertexAttribIPointer(1, 1, GL_INT, sizeof(int), (void *)(meshSize * 3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+
+    // Normal attribute
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)(meshSize * (3 * sizeof(float) + sizeof(int))));
+    glEnableVertexAttribArray(2);
 
     glBindVertexArray(0);
 }
@@ -411,7 +422,7 @@ void Chunk::draw(Shader *shader)
     if (!hasBuffer || scheduledForDeletion)
         return;
 
-    if (isSimpleChunk && simpleChunkVoxel == VOXEL_NONE)
+    if (isSimpleChunk && simpleChunkVoxel == Voxel::Air)
         return;
 
     shader->use();
@@ -431,17 +442,17 @@ void Chunk::print_info()
     log_debug("  meshSize: %d", meshSize);
     log_debug("  VAO: %d, VBO: %d, EBO: %d", VAO, VBO, EBO);
     log_debug("  Position: %d %d %d", m_x, m_y, m_z);
-    log_debug("  Edge changed: %d", edgeChanged);
+    log_debug("  Edge changed: %s", edgeChanged == Side::NONE ? "NONE" : "SOME");
     log_debug("  Needs side occlusion update: %s", needsSideOcclusionUpdate ? "true" : "false");
     log_debug("  Needs mesh update: %s", needsMeshUpdate ? "true" : "false");
     log_debug("  Needs mesh upload: %s", needsMeshUpload ? "true" : "false");
     log_debug("  Scheduled for deletion: %s", scheduledForDeletion ? "true" : "false");
-    log_debug("  m_modelMatrix: %f %f %f %f", m_modelMatrix[0][0], m_modelMatrix[0][1], m_modelMatrix[0][2], m_modelMatrix[0][3]);
-    log_debug("                 %f %f %f %f", m_modelMatrix[1][0], m_modelMatrix[1][1], m_modelMatrix[1][2], m_modelMatrix[1][3]);
-    log_debug("                 %f %f %f %f", m_modelMatrix[2][0], m_modelMatrix[2][1], m_modelMatrix[2][2], m_modelMatrix[2][3]);
-    log_debug("                 %f %f %f %f", m_modelMatrix[3][0], m_modelMatrix[3][1], m_modelMatrix[3][2], m_modelMatrix[3][3]);
-    log_debug("  m_invModelMatrix: %f %f %f %f", m_invModelMatrix[0][0], m_invModelMatrix[0][1], m_invModelMatrix[0][2], m_invModelMatrix[0][3]);
-    log_debug("                    %f %f %f %f", m_invModelMatrix[1][0], m_invModelMatrix[1][1], m_invModelMatrix[1][2], m_invModelMatrix[1][3]);
-    log_debug("                    %f %f %f %f", m_invModelMatrix[2][0], m_invModelMatrix[2][1], m_invModelMatrix[2][2], m_invModelMatrix[2][3]);
-    log_debug("                    %f %f %f %f", m_invModelMatrix[3][0], m_invModelMatrix[3][1], m_invModelMatrix[3][2], m_invModelMatrix[3][3]);
+    // log_debug("  m_modelMatrix: %f %f %f %f", m_modelMatrix[0][0], m_modelMatrix[0][1], m_modelMatrix[0][2], m_modelMatrix[0][3]);
+    // log_debug("                 %f %f %f %f", m_modelMatrix[1][0], m_modelMatrix[1][1], m_modelMatrix[1][2], m_modelMatrix[1][3]);
+    // log_debug("                 %f %f %f %f", m_modelMatrix[2][0], m_modelMatrix[2][1], m_modelMatrix[2][2], m_modelMatrix[2][3]);
+    // log_debug("                 %f %f %f %f", m_modelMatrix[3][0], m_modelMatrix[3][1], m_modelMatrix[3][2], m_modelMatrix[3][3]);
+    // log_debug("  m_invModelMatrix: %f %f %f %f", m_invModelMatrix[0][0], m_invModelMatrix[0][1], m_invModelMatrix[0][2], m_invModelMatrix[0][3]);
+    // log_debug("                    %f %f %f %f", m_invModelMatrix[1][0], m_invModelMatrix[1][1], m_invModelMatrix[1][2], m_invModelMatrix[1][3]);
+    // log_debug("                    %f %f %f %f", m_invModelMatrix[2][0], m_invModelMatrix[2][1], m_invModelMatrix[2][2], m_invModelMatrix[2][3]);
+    // log_debug("                    %f %f %f %f", m_invModelMatrix[3][0], m_invModelMatrix[3][1], m_invModelMatrix[3][2], m_invModelMatrix[3][3]);
 }

@@ -1,4 +1,5 @@
 #include "testgl/cube.hpp"
+#include "testgl/logging.hpp"
 
 #include <glm/glm.hpp>
 #include <cstring>
@@ -74,41 +75,70 @@ namespace CubeMeshSides
         return faces_at(pos.x, pos.y, pos.z, side);
     }
 
-    std::vector<glm::vec3> normals_on(Sides sides)
+    void normals_on(Sides sides, float destination[3 * 6])
     {
-        std::vector<glm::vec3> normals_vec;
+        int i = 0;
 
         if (sides & Side::FRONT)
         {
-            normals_vec.insert(normals_vec.end(), face_front_normal);
+            for (int vertex = 0; vertex < 6; vertex++)
+            {
+                destination[i++] = face_front_normal.x;
+                destination[i++] = face_front_normal.y;
+                destination[i++] = face_front_normal.z;
+            }
         }
 
         if (sides & Side::BACK)
         {
-            normals_vec.insert(normals_vec.end(), face_back_normal);
+            for (int vertex = 0; vertex < 6; vertex++)
+            {
+                destination[i++] = face_back_normal.x;
+                destination[i++] = face_back_normal.y;
+                destination[i++] = face_back_normal.z;
+            }
         }
 
         if (sides & Side::LEFT)
         {
-            normals_vec.insert(normals_vec.end(), face_left_normal);
+            for (int vertex = 0; vertex < 6; vertex++)
+            {
+                destination[i++] = face_left_normal.x;
+                destination[i++] = face_left_normal.y;
+                destination[i++] = face_left_normal.z;
+            }
         }
 
         if (sides & Side::RIGHT)
         {
-            normals_vec.insert(normals_vec.end(), face_right_normal);
+            for (int vertex = 0; vertex < 6; vertex++)
+            {
+                destination[i++] = face_right_normal.x;
+                destination[i++] = face_right_normal.y;
+                destination[i++] = face_right_normal.z;
+            }
         }
 
         if (sides & Side::TOP)
         {
-            normals_vec.insert(normals_vec.end(), face_top_normal);
+            for (int vertex = 0; vertex < 6; vertex++)
+            {
+                destination[i++] = face_top_normal.x;
+                destination[i++] = face_top_normal.y;
+                destination[i++] = face_top_normal.z;
+            }
         }
 
         if (sides & Side::BOTTOM)
         {
-            normals_vec.insert(normals_vec.end(), face_bottom_normal);
+            for (int vertex = 0; vertex < 6; vertex++)
+            {
+                destination[i++] = face_bottom_normal.x;
+                destination[i++] = face_bottom_normal.y;
+                destination[i++] = face_bottom_normal.z;
+            }
         }
-
-        return normals_vec;
+        // log_debug("i = %d", i);
     }
 }
 

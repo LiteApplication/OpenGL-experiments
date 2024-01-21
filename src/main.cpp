@@ -2,6 +2,7 @@
 #include "testgl/main.hpp"
 #include "testgl/logging.hpp"
 #include "learnopengl/Shaders.hpp"
+#include "testgl/sun.hpp"
 
 #include <chrono>
 #include <thread>
@@ -18,6 +19,9 @@ int main(int argc, char **argv)
     log_debug("Loading shaders");
     Shader shader("../shaders/base.vert", "../shaders/base.frag"); // Relative to the build directory
 
+    // Setup the shader
+    ShaderData::setupMaterials(&shader);
+
     // Load the player
     log_debug("Loading player");
     Player player;
@@ -29,6 +33,10 @@ int main(int argc, char **argv)
     World world(player.getPositionPtr(), WorldGenerator::perlin);
     if (GEN_ALL_CHUNKS_ON_START)
         world.loadAllChunks();
+
+    // Here comes the sun
+    log_debug("Creating sun");
+    Sun sun(&shader);
 
     // Create the tick thread
     log_debug("Creating tick thread");
@@ -48,6 +56,11 @@ int main(int argc, char **argv)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         player.processKeyboard(window, deltaTime);
         player.setupCameraTransform(&shader, WINDOW_WIDTH, WINDOW_HEIGHT);
+
+        // Set the player position in the shader
+        shader.use();
+        shader.setVec3("viewPos", player.getPosition());
+        sun.update(deltaTime, player.getPosition());
 
         if (player.debugMode)
         {

@@ -46,7 +46,7 @@ public:
     Chunk(int x, int y, int z, World *world);
     ~Chunk();
 
-    bool isEmpty() { return isSimpleChunk && simpleChunkVoxel == VOXEL_NONE; }
+    bool isEmpty() { return isSimpleChunk && simpleChunkVoxel == Voxel::Air; }
 
     Voxel getVoxel(int x, int y, int z);
     void setVoxel(int x, int y, int z, Voxel value);

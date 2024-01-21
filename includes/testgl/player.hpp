@@ -34,4 +34,5 @@ public:
         log_debug("Player is looking at (%f, %f, %f)", front.x, front.y, front.z);
     }
     glm::vec3 *getPositionPtr() { return &camera.Position; }
+    glm::vec3 getPosition() { return camera.Position; }
 };

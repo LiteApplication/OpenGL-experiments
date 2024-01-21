@@ -91,7 +91,7 @@ namespace CubeMeshSides
 
     std::vector<float> faces_at(float x, float y, float z, Sides sides);
     std::vector<float> faces_at(glm::vec3 pos, Sides sides);
-    std::vector<glm::vec3> normals_on(Sides sides);
+    void normals_on(Sides sides, float destination[3 * 6]);
 } // namespace CubeMeshSides
 
 Side opposite_side(Side side);
