@@ -12,6 +12,9 @@ if(CCACHE_FOUND)
     message(STATUS "Using ccache.")
 endif(CCACHE_FOUND)
 
+
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+
 # The additional / is important to remove the last character from the path.
 # Note that it does not matter if the OS uses / or \, because we are only
 # saving the path size.

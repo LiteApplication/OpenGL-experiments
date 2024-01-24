@@ -22,6 +22,7 @@ namespace ShaderData
         vec3 diffuse;
         vec3 specular;
         float shininess;
+        bool flow;
     };
 
     const Material materials[] = {
@@ -29,27 +30,32 @@ namespace ShaderData
         {.ambient = vec3(0.0f, 0.0f, 0.0f),
          .diffuse = vec3(0.0f, 0.0f, 0.0f),
          .specular = vec3(0.0f, 0.0f, 0.0f),
-         .shininess = 0.0f},
+         .shininess = 0.0f,
+         .flow = false},
         // Dirt
         {.ambient = vec3(0.17f, 0.09f, 0.05f),
          .diffuse = vec3(0.17f, 0.09f, 0.05f),
          .specular = vec3(0.0f, 0.00f, 0.00f),
-         .shininess = 1.0f},
+         .shininess = 1.0f,
+         .flow = false},
         // Grass
         {.ambient = vec3(0.07f, 0.43f, 0.08f),
          .diffuse = vec3(0.07f, 0.43f, 0.08f),
-         .specular = vec3(0.07f, 0.43f, 0.08f),
-         .shininess = 1.0f},
+         .specular = vec3(0.03f, 0.21f, 0.04f),
+         .shininess = 1.0f,
+         .flow = false},
         // Sand
         {.ambient = vec3(0.43f, 0.43f, 0.00f),
          .diffuse = vec3(0.60f, 0.60f, 0.00f),
          .specular = vec3(0.00f, 0.0f, 0.00f),
-         .shininess = 1.0f},
+         .shininess = 1.0f,
+         .flow = false},
         // Water
         {.ambient = vec3(0.0f, 0.0f, 0.43f),
-         .diffuse = vec3(0.1f, 0.1f, 0.53f),
+         .diffuse = vec3(0.05f, 0.31f, 0.48f),
          .specular = vec3(0.9f, 0.9f, 1.0f),
-         .shininess = 512.0f},
+         .shininess = 512.0f,
+         .flow = true},
     };
 
     // Setup function to load the materials into the shader
@@ -62,6 +68,7 @@ namespace ShaderData
             shader->setVec3("materials[" + std::to_string(i) + "].diffuse", materials[i].diffuse);
             shader->setVec3("materials[" + std::to_string(i) + "].specular", materials[i].specular);
             shader->setFloat("materials[" + std::to_string(i) + "].shininess", materials[i].shininess);
+            shader->setBool("materials[" + std::to_string(i) + "].flow", materials[i].flow);
         }
     }
 

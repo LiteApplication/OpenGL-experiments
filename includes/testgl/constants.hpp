@@ -13,7 +13,7 @@
 
 #define CHUNK_SIZE 64           // in voxels
 #define VIEW_DISTANCE 4         // in chunks
-#define HEIGHT_VIEW_REDUCTION 2 // 1 = no reduction, 2 = half, 3 = third, etc.
+#define HEIGHT_VIEW_REDUCTION 3 // 1 = no reduction, 2 = half, 3 = third, etc.
 
 #define GEN_ALL_CHUNKS_ON_START false
 

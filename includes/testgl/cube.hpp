@@ -22,76 +22,76 @@ enum Side : Sides
 
 namespace CubeMeshSides
 {
-    const float face_front[] = {
-        // positions
-        -0.5f, -0.5f, 0.5f, //
-        0.5f, -0.5f, 0.5f,  //
-        0.5f, 0.5f, 0.5f,   //
-        0.5f, 0.5f, 0.5f,   //
-        -0.5f, 0.5f, 0.5f,  //
-        -0.5f, -0.5f, 0.5f, //
+
+    const int values_per_face = 18;
+
+    const float faces_array[6][values_per_face] = {
+        {
+            // positions : front
+            -0.5f, -0.5f, 0.5f, //
+            0.5f, -0.5f, 0.5f,  //
+            0.5f, 0.5f, 0.5f,   //
+            0.5f, 0.5f, 0.5f,   //
+            -0.5f, 0.5f, 0.5f,  //
+            -0.5f, -0.5f, 0.5f, //
+        },
+        {
+            // positions : back
+            -0.5f, -0.5f, -0.5f, //
+            0.5f, 0.5f, -0.5f,   //
+            0.5f, -0.5f, -0.5f,  //
+            0.5f, 0.5f, -0.5f,   //
+            -0.5f, -0.5f, -0.5f, //
+            -0.5f, 0.5f, -0.5f,  //
+        },
+        {
+            // positions : left
+            -0.5f, 0.5f, 0.5f,   //
+            -0.5f, 0.5f, -0.5f,  //
+            -0.5f, -0.5f, -0.5f, //
+            -0.5f, -0.5f, -0.5f, //
+            -0.5f, -0.5f, 0.5f,  //
+            -0.5f, 0.5f, 0.5f,   //
+        },
+        {
+            // positions : right
+            0.5f, 0.5f, 0.5f,   //
+            0.5f, -0.5f, -0.5f, //
+            0.5f, 0.5f, -0.5f,  //
+            0.5f, -0.5f, -0.5f, //
+            0.5f, 0.5f, 0.5f,   //
+            0.5f, -0.5f, 0.5f,  //
+        },
+        {
+            // positions : top
+            -0.5f, 0.5f, -0.5f, //
+            0.5f, 0.5f, 0.5f,   //
+            0.5f, 0.5f, -0.5f,  //
+            0.5f, 0.5f, 0.5f,   //
+            -0.5f, 0.5f, -0.5f, //
+            -0.5f, 0.5f, 0.5f,  //
+        },
+        {
+            // positions : bottom
+            -0.5f, -0.5f, -0.5f, //
+            0.5f, -0.5f, -0.5f,  //
+            0.5f, -0.5f, 0.5f,   //
+            0.5f, -0.5f, 0.5f,   //
+            -0.5f, -0.5f, 0.5f,  //
+            -0.5f, -0.5f, -0.5f, //
+        }};
+    const float faces_array_normals[6][3] = {
+        {0.0f, 0.0f, 1.0f},  // front
+        {0.0f, 0.0f, -1.0f}, // back
+        {-1.0f, 0.0f, 0.0f}, // left
+        {1.0f, 0.0f, 0.0f},  // right
+        {0.0f, 1.0f, 0.0f},  // top
+        {0.0f, -1.0f, 0.0f}  // bottom
     };
 
-    const float face_back[] = {
-        // positions
-        -0.5f, -0.5f, -0.5f, //
-        0.5f, 0.5f, -0.5f,   //
-        0.5f, -0.5f, -0.5f,  //
-        0.5f, 0.5f, -0.5f,   //
-        -0.5f, -0.5f, -0.5f, //
-        -0.5f, 0.5f, -0.5f,  //
-    };
-
-    const float face_left[] = {
-        // positions
-        -0.5f, 0.5f, 0.5f,   //
-        -0.5f, 0.5f, -0.5f,  //
-        -0.5f, -0.5f, -0.5f, //
-        -0.5f, -0.5f, -0.5f, //
-        -0.5f, -0.5f, 0.5f,  //
-        -0.5f, 0.5f, 0.5f,   //
-    };
-
-    const float face_right[] = {
-        // positions
-        0.5f, 0.5f, 0.5f,   //
-        0.5f, -0.5f, -0.5f, //
-        0.5f, 0.5f, -0.5f,  //
-        0.5f, -0.5f, -0.5f, //
-        0.5f, 0.5f, 0.5f,   //
-        0.5f, -0.5f, 0.5f,  //
-    };
-
-    const float face_top[] = {
-        // positions
-        -0.5f, 0.5f, -0.5f, //
-        0.5f, 0.5f, 0.5f,   //
-        0.5f, 0.5f, -0.5f,  //
-        0.5f, 0.5f, 0.5f,   //
-        -0.5f, 0.5f, -0.5f, //
-        -0.5f, 0.5f, 0.5f,  //
-    };
-
-    const float face_bottom[] = {
-        // positions
-        -0.5f, -0.5f, -0.5f, //
-        0.5f, -0.5f, -0.5f,  //
-        0.5f, -0.5f, 0.5f,   //
-        0.5f, -0.5f, 0.5f,   //
-        -0.5f, -0.5f, 0.5f,  //
-        -0.5f, -0.5f, -0.5f, //
-    };
-
-    const glm::vec3 face_front_normal = glm::vec3(0.0f, 0.0f, 1.0f);
-    const glm::vec3 face_back_normal = glm::vec3(0.0f, 0.0f, -1.0f);
-    const glm::vec3 face_left_normal = glm::vec3(-1.0f, 0.0f, 0.0f);
-    const glm::vec3 face_right_normal = glm::vec3(1.0f, 0.0f, 0.0f);
-    const glm::vec3 face_top_normal = glm::vec3(0.0f, 1.0f, 0.0f);
-    const glm::vec3 face_bottom_normal = glm::vec3(0.0f, -1.0f, 0.0f);
-
-    std::vector<float> faces_at(float x, float y, float z, Sides sides);
-    std::vector<float> faces_at(glm::vec3 pos, Sides sides);
-    void normals_on(Sides sides, float destination[3 * 6]);
+    float *faces_at(float x, float y, float z, Sides sides, float destination[]);
+    float *faces_at(glm::vec3 pos, Sides sides, float destination[]);
+    float *normals_on(Sides sides, float destination[3 * 6]);
 } // namespace CubeMeshSides
 
 Side opposite_side(Side side);

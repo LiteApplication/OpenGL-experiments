@@ -7,137 +7,46 @@
 
 namespace CubeMeshSides
 {
-    // TODO: Use the same method as normals_on to generate these
-    std::vector<float> faces(Sides sides)
+    float *faces_at(float x, float y, float z, Sides sides, float destination[])
     {
-        // Count the number of 1 bits in side
-        int num_faces = 0;
-        for (int i = 0; i < 6; i++)
+        // Count the number of 1 bits in sides
+        int current = 0;
+        for (int f = 0; f < 6; f++)
         {
-            if (sides & (1 << i))
-                num_faces++;
+            if (sides & (1 << f))
+            {
+                for (int i = 0; i < values_per_face;)
+                {
+                    destination[current++] = faces_array[f][i++] + x;
+                    destination[current++] = faces_array[f][i++] + y;
+                    destination[current++] = faces_array[f][i++] + z;
+                }
+            }
         }
-
-        std::vector<float> faces_vec;
-        faces_vec.reserve(num_faces * sizeof(face_front));
-
-        if (sides & Side::FRONT)
-        {
-            faces_vec.insert(faces_vec.end(), std::begin(face_front),
-                             std::end(face_front));
-        }
-        if (sides & Side::BACK)
-        {
-            faces_vec.insert(faces_vec.end(), std::begin(face_back),
-                             std::end(face_back));
-        }
-        if (sides & Side::LEFT)
-        {
-            faces_vec.insert(faces_vec.end(), std::begin(face_left),
-                             std::end(face_left));
-        }
-        if (sides & Side::RIGHT)
-        {
-            faces_vec.insert(faces_vec.end(), std::begin(face_right),
-                             std::end(face_right));
-        }
-        if (sides & Side::TOP)
-        {
-            faces_vec.insert(faces_vec.end(), std::begin(face_top),
-                             std::end(face_top));
-        }
-        if (sides & Side::BOTTOM)
-        {
-            faces_vec.insert(faces_vec.end(), std::begin(face_bottom),
-                             std::end(face_bottom));
-        }
-
-        return faces_vec;
+        return &destination[current];
     }
 
-    std::vector<float> faces_at(float x, float y, float z, Sides sides)
+    float *faces_at(glm::vec3 pos, Sides side, float destination[])
     {
-        std::vector<float> faces_vec = faces(sides);
-
-        for (int i = 0; i < faces_vec.size(); i += 3)
-        {
-            faces_vec[i] += x;
-            faces_vec[i + 1] += y;
-            faces_vec[i + 2] += z;
-        }
-
-        return faces_vec;
+        return faces_at(pos.x, pos.y, pos.z, side, destination);
     }
 
-    std::vector<float> faces_at(glm::vec3 pos, Sides side)
+    float *normals_on(Sides sides, float destination[3 * 6])
     {
-        return faces_at(pos.x, pos.y, pos.z, side);
-    }
-
-    void normals_on(Sides sides, float destination[3 * 6])
-    {
-        int i = 0;
-
-        if (sides & Side::FRONT)
+        int current = 0;
+        for (int f = 0; f < 6; f++)
         {
-            for (int vertex = 0; vertex < 6; vertex++)
+            if (sides & (1 << f))
             {
-                destination[i++] = face_front_normal.x;
-                destination[i++] = face_front_normal.y;
-                destination[i++] = face_front_normal.z;
+                for (int v = 0; v < 6; v++)
+                    for (int i = 0; i < 3; i++)
+                    {
+                        destination[current] = faces_array_normals[f][i];
+                        current++;
+                    }
             }
         }
-
-        if (sides & Side::BACK)
-        {
-            for (int vertex = 0; vertex < 6; vertex++)
-            {
-                destination[i++] = face_back_normal.x;
-                destination[i++] = face_back_normal.y;
-                destination[i++] = face_back_normal.z;
-            }
-        }
-
-        if (sides & Side::LEFT)
-        {
-            for (int vertex = 0; vertex < 6; vertex++)
-            {
-                destination[i++] = face_left_normal.x;
-                destination[i++] = face_left_normal.y;
-                destination[i++] = face_left_normal.z;
-            }
-        }
-
-        if (sides & Side::RIGHT)
-        {
-            for (int vertex = 0; vertex < 6; vertex++)
-            {
-                destination[i++] = face_right_normal.x;
-                destination[i++] = face_right_normal.y;
-                destination[i++] = face_right_normal.z;
-            }
-        }
-
-        if (sides & Side::TOP)
-        {
-            for (int vertex = 0; vertex < 6; vertex++)
-            {
-                destination[i++] = face_top_normal.x;
-                destination[i++] = face_top_normal.y;
-                destination[i++] = face_top_normal.z;
-            }
-        }
-
-        if (sides & Side::BOTTOM)
-        {
-            for (int vertex = 0; vertex < 6; vertex++)
-            {
-                destination[i++] = face_bottom_normal.x;
-                destination[i++] = face_bottom_normal.y;
-                destination[i++] = face_bottom_normal.z;
-            }
-        }
-        // log_debug("i = %d", i);
+        return &destination[current];
     }
 }
 

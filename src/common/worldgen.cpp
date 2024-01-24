@@ -106,7 +106,7 @@ namespace WorldGenerator
         FastNoiseLite n;
         n.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
         n.SetSeed(27012004);
-        n.SetFrequency(0.02);
+        n.SetFrequency(0.01);
         n.SetFractalType(FastNoiseLite::FractalType_FBm);
         n.SetFractalOctaves(2);
         n.SetFractalLacunarity(2.0);
@@ -157,6 +157,7 @@ namespace WorldGenerator
         }
         *isSimpleChunk = false;
 
+        int ylimit = ChunkPosTools::getY(pos) == -1 ? CHUNK_SIZE - 2 : CHUNK_SIZE;
         for (int x = 0; x < CHUNK_SIZE; x++)
         {
             for (int z = 0; z < CHUNK_SIZE; z++)
@@ -178,8 +179,7 @@ namespace WorldGenerator
                     }
                     if (height[x][z] < CHUNK_SIZE)
                     {
-
-                        for (int y = height[x][z]; y < CHUNK_SIZE - 2; y++)
+                        for (int y = height[x][z]; y < ylimit; y++)
                         {
                             voxel3d(x, y, z) = Voxel::Water;
                         }

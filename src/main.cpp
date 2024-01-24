@@ -60,6 +60,7 @@ int main(int argc, char **argv)
         // Set the player position in the shader
         shader.use();
         shader.setVec3("viewPos", player.getPosition());
+        shader.setFloat("time", (float)glfwGetTime());
         sun.update(deltaTime, player.getPosition());
 
         if (player.debugMode)
