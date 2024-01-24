@@ -22,9 +22,9 @@ private:
     bool isSimpleChunk;
     Voxel simpleChunkVoxel;
 
-    std::vector<float> meshVertices;
-    std::vector<float> meshNormals; // unused
-    std::vector<int> meshColors;
+    float *meshVertices;
+    float *meshNormals; // unused
+    int *meshColors;
     std::vector<unsigned int> meshIndices;
     int meshSize;
 

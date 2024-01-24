@@ -14,7 +14,11 @@
 Chunk::Chunk(int x, int y, int z, World *world) : VAO(0), VBO(0), EBO(0),
                                                   world(world),
                                                   needsDraw({{{0}}}),
-                                                  voxels({(Voxel)0})
+                                                  voxels({(Voxel)0}),
+                                                  obstructions({{{false}}}),
+                                                  meshVertices(nullptr),
+                                                  meshColors(nullptr),
+                                                  meshNormals(nullptr)
 {
     m_x = x;
     m_y = y;
@@ -41,9 +45,12 @@ Chunk::Chunk(int x, int y, int z, World *world) : VAO(0), VBO(0), EBO(0),
 
 Chunk::~Chunk()
 {
-    meshVertices.clear();
-    meshNormals.clear();
-    meshColors.clear();
+    if (meshVertices)
+        delete meshVertices;
+    if (meshColors)
+        delete meshColors;
+    if (meshNormals)
+        delete meshNormals;
 
     // log_debug("Discarding chunk (%d, %d, %d)", m_x, m_y, m_z);
 }
@@ -337,22 +344,29 @@ void Chunk::generateMesh()
     needsMeshUpdate = false;
     needsMeshUpload = false;
 
-    meshVertices.clear();
-    meshNormals.clear();
-    meshColors.clear();
+    if (meshVertices)
+        delete meshVertices;
+    meshVertices = new float[needsDrawCount * CubeMeshSides::values_per_face]();
 
-    meshVertices.reserve(needsDrawCount * CubeMeshSides::values_per_face);
-    meshColors.reserve(needsDrawCount * CubeMeshSides::values_per_face / 3);
-    meshNormals.reserve(needsDrawCount * CubeMeshSides::values_per_face);
+    if (meshNormals)
+        delete meshNormals;
+    meshNormals = new float[needsDrawCount * CubeMeshSides::values_per_face]();
 
+    if (meshColors)
+        delete meshColors;
+    meshColors = new int[needsDrawCount * CubeMeshSides::values_per_face / 3]();
+
+    int meshVerticesCount = 0;
     if (isSimpleChunk && simpleChunkVoxel == Voxel::Air)
     {
-        meshSize = meshVertices.size() / 3;
+        meshSize = meshVerticesCount / 3;
 
         needsMeshUpload = true;
         world->addToUploadQueue(this);
         return;
     }
+
+    int colorCount = 0;
     for (int i = 0; i < CHUNK_SIZE; i++)
     {
         for (int j = 0; j < CHUNK_SIZE; j++)
@@ -369,26 +383,27 @@ void Chunk::generateMesh()
                 }
 
                 int block_vertices = CubeMeshSides::values_per_face * n_faces;
-                meshVertices.resize(meshVertices.size() + block_vertices);
-                float *begin = &meshVertices[meshVertices.size() - block_vertices];
+                float *begin = &meshVertices[meshVerticesCount];
 
                 float *end = CubeMeshSides::faces_at(i, j, k, needsDraw[i][j][k], begin);
 
                 for (int l = 0; l < block_vertices / 3; l++)
                 {
-                    meshColors.push_back(_getVoxel(i, j, k));
+                    meshColors[colorCount++] = _getVoxel(i, j, k);
                 }
 
                 // Use normals_on to append the normals to the meshNormals vector
                 // Expand the meshNormals vector to make room for the new normals
-                int prevSize = meshNormals.size();
-                meshNormals.resize(prevSize + n_faces * CubeMeshSides::values_per_face);
-                CubeMeshSides::normals_on(needsDraw[i][j][k], &meshNormals[prevSize]);
+                float *beginNormals = &meshNormals[meshVerticesCount];
+                float *endNormals = CubeMeshSides::normals_on(needsDraw[i][j][k], beginNormals);
+
+                meshVerticesCount += (end - begin);
+                assert(end - begin == endNormals - beginNormals);
             }
         }
     }
 
-    meshSize = meshVertices.size() / 3;
+    meshSize = meshVerticesCount / 3;
 
     needsMeshUpload = true;
     world->addToUploadQueue(this);
@@ -411,9 +426,9 @@ void Chunk::uploadMesh()
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     // Make room for 3 floats coords , 1 int color and 3 floats normals
     glBufferData(GL_ARRAY_BUFFER, meshSize * (3 * sizeof(float) + sizeof(int) + 3 * sizeof(float)), NULL, GL_DYNAMIC_DRAW);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, meshSize * 3 * sizeof(float), meshVertices.data());
-    glBufferSubData(GL_ARRAY_BUFFER, meshSize * 3 * sizeof(float), meshSize * sizeof(int), meshColors.data());
-    glBufferSubData(GL_ARRAY_BUFFER, meshSize * (3 * sizeof(float) + sizeof(int)), meshSize * 3 * sizeof(float), meshNormals.data());
+    glBufferSubData(GL_ARRAY_BUFFER, 0, meshSize * 3 * sizeof(float), meshVertices);
+    glBufferSubData(GL_ARRAY_BUFFER, meshSize * 3 * sizeof(float), meshSize * sizeof(int), meshColors);
+    glBufferSubData(GL_ARRAY_BUFFER, meshSize * (3 * sizeof(float) + sizeof(int)), meshSize * 3 * sizeof(float), meshNormals);
 
     // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     // glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshIndices.size() * sizeof(unsigned int), meshIndices.data(), GL_STATIC_DRAW);
