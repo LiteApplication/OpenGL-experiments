@@ -44,6 +44,7 @@ int main(int argc, char **argv)
 
     // Loop until the user closes the window
     log_debug("Starting main loop");
+    int frame_n = 1;
     auto previousTime = std::chrono::high_resolution_clock::now();
     while (!window.shouldClose())
     {
@@ -74,6 +75,13 @@ int main(int argc, char **argv)
 
         world.graphicalTick(&shader);
 
+        if (frame_n % 120 == 0)
+        {
+            // Print fps
+            float fps = 1.0f / deltaTime;
+            log_debug("FPS: %f", fps);
+        }
+        frame_n += 1;
         // Swap front and back buffers
         glfwSwapBuffers(window);
 

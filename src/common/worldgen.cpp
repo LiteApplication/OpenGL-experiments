@@ -113,7 +113,7 @@ namespace WorldGenerator
         n.SetFractalGain(0.5);
         n.SetFractalWeightedStrength(7.0);
 
-        const int amplitude = 50;
+        const int amplitude = 75;
 
         int chunkY = ChunkPosTools::getY(pos) * CHUNK_SIZE;
         int height[CHUNK_SIZE][CHUNK_SIZE];

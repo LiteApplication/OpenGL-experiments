@@ -5,9 +5,9 @@
 
 
 #define FLOW_SPEED 2.0
-#define FLOW_AMPLITUDE 0.01
+#define FLOW_AMPLITUDE 0.005
 #define FLOW_SPREAD 3.0
-#define FLOW_LAYERS 5
+#define FLOW_LAYERS 4
 
 flat in int material; // Receive the color from the vertex shader
 flat in vec3 normalRaw;

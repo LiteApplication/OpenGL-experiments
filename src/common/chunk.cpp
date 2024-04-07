@@ -33,7 +33,7 @@ Chunk::Chunk(int x, int y, int z, World *world) : VAO(0), VBO(0), EBO(0),
     m_modelMatrix = glm::mat4(1.0f);
     m_modelMatrix = glm::translate(m_modelMatrix, glm::vec3(x, y, z) * (float)CHUNK_SIZE);
     // m_invModelMatrix = glm::inverse(m_modelMatrix);
-    m_invModelMatrix = -m_modelMatrix; // We only translate, so the inverse is the opposite translation
+    m_invModelMatrix = glm::translate(glm::mat4(1.0f), -glm::vec3(x, y, z) * (float)CHUNK_SIZE); // We only translate, so the inverse is the opposite translation
 
     meshSize = 0;
 
@@ -46,11 +46,11 @@ Chunk::Chunk(int x, int y, int z, World *world) : VAO(0), VBO(0), EBO(0),
 Chunk::~Chunk()
 {
     if (meshVertices)
-        delete meshVertices;
+        delete[] meshVertices;
     if (meshColors)
-        delete meshColors;
+        delete[] meshColors;
     if (meshNormals)
-        delete meshNormals;
+        delete[] meshNormals;
 
     // log_debug("Discarding chunk (%d, %d, %d)", m_x, m_y, m_z);
 }
@@ -345,15 +345,15 @@ void Chunk::generateMesh()
     needsMeshUpload = false;
 
     if (meshVertices)
-        delete meshVertices;
+        delete[] meshVertices;
     meshVertices = new float[needsDrawCount * CubeMeshSides::values_per_face]();
 
     if (meshNormals)
-        delete meshNormals;
+        delete[] meshNormals;
     meshNormals = new float[needsDrawCount * CubeMeshSides::values_per_face]();
 
     if (meshColors)
-        delete meshColors;
+        delete[] meshColors;
     meshColors = new int[needsDrawCount * CubeMeshSides::values_per_face / 3]();
 
     int meshVerticesCount = 0;

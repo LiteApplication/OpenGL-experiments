@@ -20,19 +20,16 @@ void setup_player_callbacks(GLFWwindow *window, Player *player)
     glfwSetWindowUserPointer(window, player);
 
     // Setup the GLFW key callback
-    log_debug("Setting up GLFW key callback");
+    log_debug("Setting up GLFW callbacks");
     glfwSetKeyCallback(window, glfw_key_callback);
 
     // Setup the GLFW mouse button callback
-    log_debug("Setting up GLFW mouse button callback");
     glfwSetMouseButtonCallback(window, glfw_mouse_button_callback);
 
     // Setup the GLFW mouse position callback
-    log_debug("Setting up GLFW mouse position callback");
     glfwSetCursorPosCallback(window, glfw_mouse_position_callback);
 
     // Setup the GLFW mouse scroll callback
-    log_debug("Setting up GLFW mouse scroll callback");
     glfwSetScrollCallback(window, glfw_mouse_scroll_callback);
 }
 

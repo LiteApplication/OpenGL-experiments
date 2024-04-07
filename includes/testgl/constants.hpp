@@ -5,7 +5,7 @@
 #define WINDOW_WIDTH 800
 
 #define GLFW_VSYNC 1 // 0 = off, 1 = on
-#define CAPTURE_MOUSE true
+#define CAPTURE_MOUSE false
 
 #ifndef NDEBUG
 #define GLFW_REQUEST_DEBUG_CONTEXT true
@@ -17,7 +17,7 @@
 
 #define GEN_ALL_CHUNKS_ON_START false
 
-#define TICKS_PER_SECOND 4
+#define TICKS_PER_SECOND 20
 #define CHUNK_GEN_PER_TICK 4
 #define CHUNK_MESH_PER_TICK 4
 #define CHUNK_GPU_UPLOAD_PER_FRAME 8

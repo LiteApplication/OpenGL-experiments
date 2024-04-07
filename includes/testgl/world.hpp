@@ -1,5 +1,7 @@
 #pragma once
 
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include <map>
 #include <tuple>
 #include <mutex>
