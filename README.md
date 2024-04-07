@@ -1,6 +1,6 @@
 # Voxel Renderer
 
-This is a simple voxel renderer implemented in C++, utilizing OpenGL for drawing the scene. It features a separate thread for chunk building and rendering, a basic wave shader, and random terrain generation using Perlin noise.
+This is a simple voxel renderer implemented in C++, utilizing OpenGL for drawing the scene. It features a separate thread for chunk building and rendering, a basic wave shader, random terrain generation using Perlin noise and a bit of point lighting.
 
 ## Dependencies
 
@@ -10,11 +10,15 @@ This is a simple voxel renderer implemented in C++, utilizing OpenGL for drawing
 
 Make sure to install these dependancies as the program cannot be built without them
 
-
 **Arch Linux :**
+
 ```bash
 sudo pacman -S glfw glm cmake gcc
 ```
+
+## Screenshot
+
+![An isolated island in the middle of the river](doc/island.png)
 
 ## Building Instructions
 
@@ -23,22 +27,26 @@ sudo pacman -S glfw glm cmake gcc
   ```bash
   git clone https://github.com/LiteApplication/OpenGL-experiments
   ```
+
 2. Navigate to the cloned repository directory.
 
   ```bash
   cd OpenGL-experiments
   ```
+
 3. Create a build directory and navigate into it.
 
   ```bash
   mkdir build
   cd build
   ```
+
 4. Run CMake to generate build files.
 
   ```bash
   cmake ..
   ```
+
 5. Build the project using your preferred build system (Makefiles, Visual Studio solution, etc.).
 
   ```bash
@@ -67,7 +75,7 @@ sudo pacman -S glfw glm cmake gcc
 
 ## Credits
 
-This voxel renderer project was created by [LiteApplication]. It is inspired by [learnopengl.com](https://learnopengl.com/).
+This project was created while reading the website [learnopengl.com](https://learnopengl.com/).
 
 ## License
 
